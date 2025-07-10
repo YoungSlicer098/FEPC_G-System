@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supervisor Login | I-Track</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('{% static "assets/fepcbg.jpg" %}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-96">
+        <h2 class="text-3xl font-bold text-green-900 text-center mb-4">Instructor Login</h2>
+        <p class="text-gray-600 text-center mb-6">Access your account</p>
+
+        <form method="POST" action="{% url 'supervisor_login' %}">
+            {% csrf_token %}
+            <!-- Email Field -->
+            <div class="mb-4">
+                <label class="block text-gray-700 font-medium mb-2">Email</label>
+                <input type="email" name="email" value="{{ email }}" placeholder="Enter your email" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+
+            <!-- Password Field -->
+            <div class="mb-4 relative">
+                <label class="block text-gray-700 font-medium mb-2">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <span onclick="togglePassword()" class="absolute top-11 right-4 cursor-pointer text-gray-500">
+                    <i id="toggleIcon" class="fa-solid fa-eye"></i>
+                </span>
+            </div>
+            {% if messages %}
+            <div class="p-1 mb-2">
+                {% for message in messages %}
+                    {% if message.tags == "success" %}
+                        <p class="text-green-500">{{ message }}</p>  <!-- Green for success -->
+                    {% elif message.tags == "error" %}
+                        <p class="text-red-500">{{ message }}</p>  <!-- Red for errors -->
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+
+            <!-- Remember Me & Forgot Password -->
+            <div class="flex justify-between items-center mb-6">
+                <label class="flex items-center text-gray-700">
+                    <input type="checkbox" class="mr-2"> Remember me
+                </label>
+                <a href="{% url 'password_reset' %}" class="text-green-600 hover:underline hover:text-yellow-500 transition text-sm">Forgot Password?</a>
+            </div>
+
+            <!-- Login Button -->
+            <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-yellow-500 transition">
+                Login
+            </button>
+        </form>
+        
+        <!-- Create Account -->
+        <div class="mt-4 text-center">
+            <p class="text-sm text-gray-600">
+                Don't have an account? 
+                <a href="{% url 'supervisor_register' %}" class="text-green-600 hover:underline hover:underline hover:text-yellow-500 transition">Create one</a>
+            </p>
+        </div>
+
+
+        <!-- Back to Home -->
+        <div class="mt-4 text-center">
+            <a href="{% url 'home' %}" class="text-green-600 hover:underline text-sm hover:underline hover:text-yellow-500 transition">← Back to Home</a>
+        </div>
+    </div>
+
+
+    <script>
+        function togglePassword() {
+            const password = document.getElementById("password");
+            const icon = document.getElementById("toggleIcon");
+
+            if (password.type === "password") {
+                password.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                password.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+    </script>
+
+
+</body>
+</html>

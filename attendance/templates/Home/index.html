@@ -1,0 +1,70 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I-Track | Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'assets/styles.css' %}">
+    <style>
+        body {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9)), url('{% static "assets/fepcbg.jpg" %}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Navigation Bar -->
+    <nav class="text-white shadow-md p-4 flex justify-between items-center flex-wrap">
+        <!-- Logo and Brand -->
+        <div class="flex items-center space-x-3 text-2xl font-bold mb-2 sm:mb-0">
+            <img src="{% static 'assets/fepclogo.png' %}" alt="Logo" class="w-8 h-8">
+            <span>G-System</span>
+        </div>
+        <ul class="flex space-x-6 sm:space-x-16 text-sm sm:text-base">
+            <li><a href="{% url 'home' %}" class="hover:text-blue-300">Home</a></li>
+            <li><a href="{% url 'about' %}" class="hover:text-blue-300">About</a></li>
+            <li><a href="{% url 'home' %}" class="hover:text-blue-300">Login</a></li>
+        </ul>
+    </nav>
+
+    <!-- Home Section -->
+    <section id="home" class="min-h-screen flex items-center justify-center px-6 sm:px-16 py-10">
+        <!-- Content -->
+        <div class="flex flex-col lg:flex-row w-full max-w-6xl items-center gap-12">
+            
+            <!-- Left Side (Welcome Text) -->
+            <div class="w-full lg:w-1/2 text-center lg:text-left">
+                <h1 class="text-4xl sm:text-5xl lg:text-5xl tracking-wide font-bold mb-6">Far Eastern Polytechnic College<br></h1>
+                <p class="text-md sm:text-lg"><b>F</b>aith in God and in Yourself<br><b>E</b>quipping<br><b>P</b>ersevering<br><b>C</b>reating Value</br></p>
+            </div>
+
+            <!-- Right Side (Login Options) -->
+            <div class="w-full lg:w-1/2 flex flex-col items-center text-center">
+                <h2 class="text-2xl sm:text-3xl font-bold mb-4">Login</h2>
+                <p class="text-base sm:text-lg mb-6">Select your role to continue</p>
+
+                <!-- Supervisor Login Button -->
+                <a href="{% url 'supervisor_login' %}" class="bg-green-600 text-white py-3 px-6 rounded-full shadow-md text-lg font-semibold flex items-center justify-left gap-4 hover:bg-blue-700 transition w-48 mb-4">
+                    <img src="{% static 'assets/instructor.png' %}" alt="Supervisor Icon" class="w-6 h-6">
+                    <span>Instructor</span>
+                </a>
+
+                <!-- Intern Login Button -->
+                <a href="{% url 'intern_login' %}" class="bg-gray-600 text-white py-3 px-6 rounded-full shadow-md text-lg font-semibold flex items-center justify-left gap-4 hover:bg-gray-700 transition w-48">
+                    <img src="{% static 'assets/student.png' %}" alt="Intern Icon" class="w-6 h-6">
+                    <span>Student</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-black bg-opacity-50 text-center text-white text-sm py-4 border-t border-gray-700">
+        &copy; 2025 G-System | Developed by Students of BTVTED-CP-3A / TUPC
+    </footer>
+
+</body>
+</html>

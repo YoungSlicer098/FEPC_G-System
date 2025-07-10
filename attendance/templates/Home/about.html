@@ -1,0 +1,131 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meet the Developers | I-Track</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-blue-900">
+
+<!-- Navigation Bar -->
+<nav class="fixed top-0 left-0 w-full z-50 bg-green-600 text-white shadow-md px-6 py-4 flex flex-wrap justify-between items-center">
+    <!-- Logo and Brand -->
+        <div class="flex items-center space-x-3 text-2xl font-bold mb-2 sm:mb-0">
+            <img src="{% static 'assets/fepclogo.png' %}" alt="Logo" class="w-8 h-8">
+            <span>G-System</span>
+        </div>
+    <ul class="flex flex-wrap gap-6 mt-2 sm:mt-0">
+        <li><a href="{% url 'home' %}" class="hover:text-blue-300">Home</a></li>
+        <li><a href="#about" class="hover:text-blue-300">About</a></li>
+        <li><a href="#developers" class="hover:text-blue-300">Developers</a></li>
+    </ul>
+</nav>
+
+
+<!-- About Section -->
+<section id="about" class="pt-28 pb-16 text-green-500 min-h-screen px-4 sm:px-6 lg:px-12 flex items-center justify-center">
+  <div class="max-w-6xl mx-auto text-center">
+    <h2 class="text-4xl sm:text-5xl font-bold mb-6">About Far Eastern Polytechnic College</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto justify-items-center">
+      
+      <!-- Vision Box -->
+      <div class="bg-white p-6 rounded-xl shadow-2xl hover:shadow-green-400 transition-shadow duration-300">
+        <h4 class="text-xl font-semibold mb-2 text-green-700">Our Vision</h4>
+        <p class="text-gray-700 text-justify">
+          FEPC envisions itself as an active agent and catalyst in the government's entire effort to make education more responsive to the evolving needs of students, aligned with local and international standards.
+        </p>
+      </div>
+
+      <!-- Mission Box -->
+      <div class="bg-white p-6 rounded-xl shadow-2xl hover:shadow-green-400 transition-shadow duration-300">
+        <h4 class="text-xl font-semibold mb-2 text-green-700">Our Mission</h4>
+        <p class="text-gray-700 text-justify">
+          FEPC shall provide relevant educational programs and training leading to baccalaureate degrees. Establish strong academic linkages with industries, local government units, and other recognized professional organizations, and strengthen its commitment to corporate social responsibility. Strive to develop and maintain a pool of highly competent workforce to ensure the sustainability of the academic standards, goals and objectives.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- Developers Section -->
+<section id="developers" class="py-16 px-4 sm:px-6 bg-white">
+    <div class="max-w-6xl mx-auto text-center">
+        <h2 class="text-4xl sm:text-5xl font-bold text-green-700 mb-6">Developers</h2>
+        <p class="text-lg text-gray-700 mb-4">
+            Our dedicated team of developers made FEPC G-System possible. Meet the minds behind the project.
+        </p>
+        <p class="text-md text-gray-700 mb-10">
+            Need more information? <a href="#contact" class="text-green-600 hover:text-yellow-500">Contact us</a>
+        </p>
+
+        <div class="flex flex-wrap justify-center gap-8">
+            <!-- Developer 1 -->
+            <div class="bg-green-300 shadow-lg rounded-lg p-6 w-64 text-center hover:shadow-green-400 transition-shadow duration-300">
+                <img src="{% static 'assets/mj.jpg' %}" alt="Developer 1" class="w-24 h-24 mx-auto rounded-full mb-4" />
+                <h3 class="text-xl font-semibold text-green-900">Escorial, Mark Josh</h3>
+                <p class="text-gray-800">Frontend Developer</p>
+            </div>
+
+            <!-- Developer 2 -->
+            <div class="bg-green-300 shadow-lg rounded-lg p-6 w-64 text-center hover:shadow-green-400 transition-shadow duration-300">
+                <img src="{% static 'assets/dev2.jpeg' %}" alt="Developer 2" class="w-24 h-24 mx-auto rounded-full mb-4" />
+                <h3 class="text-xl font-semibold text-green-900">Velado, Mico</h3>
+                <p class="text-gray-800">Backend Developer</p>
+            </div>
+
+            <!-- Developer 3 -->
+            <div class="bg-green-300 shadow-lg rounded-lg p-6 w-64 text-center hover:shadow-green-400 transition-shadow duration-300">
+                <img src="{% static 'assets/De_Leon.png' %}" alt="Developer 3" class="w-24 h-24 mx-auto rounded-full mb-4" />
+                <h3 class="text-xl font-semibold text-green-900">De Leon, Daniel Vian</h3>
+                <p class="text-gray-800">Project Manager</p>
+            </div>
+            <!-- Developer 4 -->
+            <div class="bg-green-300 shadow-lg rounded-lg p-6 w-64 text-center hover:shadow-green-400 transition-shadow duration-300">
+                <img src="{% static 'assets/dev3.jpg' %}" alt="Developer 3" class="w-24 h-24 mx-auto rounded-full mb-4" />
+                <h3 class="text-xl font-semibold text-green-900">Delgado, Mikhaela </h3>
+                <p class="text-gray-800">UI/UX Designer</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Us Section -->
+<section id="contact" class="bg-blue-50 py-16 px-4 sm:px-6">
+    <div class="max-w-xl mx-auto">
+        <h2 class="text-4xl font-bold text-green-900 text-center mb-6">Contact Us</h2>
+        <p class="text-lg text-gray-700 text-center mb-8">
+            Have any questions or feedback? Reach out to us, and we'll get back to you as soon as possible.
+        </p>
+
+        <div class="bg-white shadow-lg rounded-lg p-8">
+            <form>
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Full Name</label>
+                    <input type="text" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter your name">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Email</label>
+                    <input type="email" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter your email">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Message</label>
+                    <textarea class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" rows="4" placeholder="Write your message"></textarea>
+                </div>
+
+                <button class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-yellow-500 transition">
+                    Send Message
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
+
+
+</body>
+</html>

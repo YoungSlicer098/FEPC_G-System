@@ -1,0 +1,174 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supervisor Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+<!-- Wrapper -->
+<div class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed top-0 left-0 w-64 h-full bg-green-600 text-white p-6 z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out lg:static lg:block">
+        <div class="flex items-center space-x-3 mb-6">
+        <img src="{% static 'assets/fepclogo.png' %}" alt="Logo" class="w-8 h-8 rounded-full">
+        <h2 class="text-2xl font-bold">G-System</h2>
+        </div>
+        <ul class="space-y-4">
+            <li><a href="{% url 'supervisor_dashboard' %}" class="block py-2 px-4 rounded hover:bg-yellow-500">🏠 Dashboard</a></li>
+            <li><a href="{% url 'supervisor_profile' %}" class="block py-2 px-4 rounded hover:bg-yellow-500">⚙️ Profile & Settings</a></li>
+            <li><button onclick="openLogoutModal()" class="w-full text-left py-2 px-4 rounded hover:bg-red-600">🚪 Logout</button></li>
+        </ul>
+    </aside>
+
+    <!-- Content Area -->
+    <div id="mainContent" class="flex-1 flex flex-col transition-all duration-300">
+
+
+        <!-- Top Bar (mobile only) -->
+        <header class="lg:hidden flex items-center justify-between bg-green-600 p-4 shadow-md">
+            <h1 class="text-xl font-bold text-white">I-TRACK</h1>
+            <button id="menuBtn" class="text-white text-2xl focus:outline-none">☰</button>
+        </header>
+
+        <!-- Main content -->
+        <main class="p-6 overflow-y-auto flex-1">
+
+            <!-- Welcome Heading -->
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold">Welcome, Instructor!</h1>
+            </div>
+
+
+            <!-- Dashboard Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold">📚 Total Strands</h3>
+                    <p id="totalCoursesCount" class="text-2xl mt-2">0</p>
+                </div>
+            </div>
+
+            <!-- Course Management Section -->
+            <div class="mt-8">
+                <h2 class="text-2xl font-bold mb-4">📚 Strands</h2>
+                <div class="flex flex-wrap gap-2">
+                    <button id="addCourseBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-yellow-500">+ Add Strand</button>
+                    <button id="manageCoursesBtn" class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600">⚙️ Manage Strand</button>
+                </div>
+
+                <!-- Course List -->
+                <div id="courseList" class="mt-6 space-y-4">
+                    {% if courses %}
+                        {% for course in courses %}
+                            <div class="courseItem bg-white p-4 rounded-lg shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4" data-course-id="{{ course.id }}" data-course-name="{{ course.name }}">
+                                <p class="text-lg font-semibold flex flex-wrap items-center gap-x-2">
+                                    <span>{{ course.name }}</span>
+                                    <span class="text-gray-500 text-sm">{{ course.academic_year }}</span>
+                                </p>
+                                <div class="flex flex-wrap gap-2">
+                                    <button class="editCourse hidden bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">✏️</button>
+                                    <button class="deleteCourse hidden bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">🗑️</button>
+                                    <a href="{% url 'view_students' course.id %}" class="viewStudentsBtn bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">View Students</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p id="noCoursesMessage" class="text-gray-600">No courses yet. Click "Add Course" to create one.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Add Course Modal -->
+<div id="addCourseModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md mx-auto">
+        <h2 class="text-xl font-bold mb-4">Add New Strand</h2>
+        <form id="courseForm" method="POST" action="{% url 'create_course' %}">
+            {% csrf_token %}
+            <label class="block mb-2">Strand Name / Academic Year</label>
+            <input type="text" id="courseName" class="w-full p-2 border rounded mb-4" required>
+
+            <select id="academicYear" class="w-full p-2 border rounded mb-4" required>
+                <option value="">Select Academic Year</option>
+            </select>
+
+            <div class="flex justify-end mt-4 space-x-2">
+                <button type="button" id="closeModal" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
+                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-yellow-500">Add Strand</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="courseFormWrapper" data-create-url="{% url 'create_course' %}"></div>
+
+<!-- Edit Course Modal -->
+<div id="editCourseModal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md mx-auto">
+        <h2 class="text-xl font-semibold mb-4">Edit Strand</h2>
+        <form id="editCourseForm">
+            <label for="editCourseName" class="block font-medium mb-1">Strand Name:</label>
+            <input type="text" id="editCourseName" class="w-full p-2 border border-gray-300 rounded mb-4" required>
+
+            <label for="editAcademicYear" class="block font-medium mb-1">Academic Year:</label>
+            <select id="editAcademicYear" class="w-full p-2 border border-gray-300 rounded mb-6" required></select>
+
+            <div class="flex justify-end space-x-2">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save Changes</button>
+                <button type="button" id="closeEditModal" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Course Modal -->
+<div id="deleteCourseModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md mx-auto">
+        <h2 class="text-xl font-semibold text-red-600">Delete Strand</h2>
+        <p id="deleteCourseMessage" class="mt-2 text-gray-700"></p>
+        <div class="mt-4 flex justify-end space-x-2">
+            <button id="cancelDeleteCourse" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
+            <button id="confirmDeleteCourse" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Logout Modal -->
+<div id="logoutModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md mx-auto">
+        <h2 class="text-xl font-bold mb-4">Confirm Logout</h2>
+        <p class="mb-6">Are you sure you want to logout?</p>
+        <div class="flex justify-end space-x-2">
+            <button onclick="closeLogoutModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
+            <button onclick="confirmLogout()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Logout</button>
+        </div>
+    </div>
+</div>
+
+<!-- Script Variables -->
+<script>
+    const baseViewStudentsURL = "{% url 'view_students' course_id=12345 %}".replace("12345", "__course_id__");
+
+    const menuBtn = document.getElementById('menuBtn');
+    const sidebar = document.getElementById('sidebar');
+
+    menuBtn?.addEventListener('click', () => {
+        sidebar.classList.toggle('-translate-x-full');
+    });
+
+    function confirmLogout() {
+        window.location.href = "{% url 'supervisor_logout' %}";
+    }
+</script>
+
+<!-- Link to External JS -->
+<script src="{% static 'Supervisor-js/common.js' %}"></script>
+<script src="{% static 'Supervisor-js/scripts.js' %}"></script>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+[33mcommit 6b8da9512ed58a6b912478da3756916dffb9ac36[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: gaudicos <gaudicoschristian4@gmail.com>
+Date:   Sun May 25 16:35:35 2025 +0800
+
+    Fix template path casing for Linux server
+
+[1mdiff --git a/attendance/__pycache__/tests.cpython-313.pyc b/attendance/__pycache__/tests.cpython-313.pyc[m
+[1mnew file mode 100644[m
+[1mindex 0000000..14ace09[m
+Binary files /dev/null and b/attendance/__pycache__/tests.cpython-313.pyc differ
+[1mdiff --git a/attendance/__pycache__/urls.cpython-313.pyc b/attendance/__pycache__/urls.cpython-313.pyc[m
+[1mindex f0a46ef..8bbaded 100644[m
+Binary files a/attendance/__pycache__/urls.cpython-313.pyc and b/attendance/__pycache__/urls.cpython-313.pyc differ
+[1mdiff --git a/attendance/__pycache__/views.cpython-313.pyc b/attendance/__pycache__/views.cpython-313.pyc[m
+[1mindex 20c2072..affeb18 100644[m
+Binary files a/attendance/__pycache__/views.cpython-313.pyc and b/attendance/__pycache__/views.cpython-313.pyc differ
+[1mdiff --git a/attendance/views.py b/attendance/views.py[m
+[1mindex a1771e8..aebe02b 100644[m
+[1m--- a/attendance/views.py[m
+[1m+++ b/attendance/views.py[m
+[36m@@ -210,7 +210,7 @@[m [mdef view_students(request, course_id):[m
+     student_links = CourseStudent.objects.filter(course=course).select_related('student')[m
+     students = [link.student for link in student_links][m
+ [m
+[31m-    return render(request, 'supervisor/view-students.html', {[m
+[32m+[m[32m    return render(request, 'Supervisor/view-students.html', {[m
+         'course': course,[m
+         'students': students,[m
+     })[m
+[1mdiff --git a/db.sqlite3 b/db.sqlite3[m
+[1mindex 4244a2a..2957eec 100644[m
+Binary files a/db.sqlite3 and b/db.sqlite3 differ
+[1mdiff --git a/i_track/__pycache__/settings.cpython-313.pyc b/i_track/__pycache__/settings.cpython-313.pyc[m
+[1mindex 3cb84b6..187e917 100644[m
+Binary files a/i_track/__pycache__/settings.cpython-313.pyc and b/i_track/__pycache__/settings.cpython-313.pyc differ
+[1mdiff --git a/i_track/__pycache__/urls.cpython-313.pyc b/i_track/__pycache__/urls.cpython-313.pyc[m
+[1mindex 83e32b2..c08b231 100644[m
+Binary files a/i_track/__pycache__/urls.cpython-313.pyc and b/i_track/__pycache__/urls.cpython-313.pyc differ
