@@ -21,6 +21,16 @@ urlpatterns = [
     path('edit-student/', views.edit_student, name='edit_student'),
     path('delete-student/', views.delete_student, name='delete_student'),
     path('supervisor/interns/<int:intern_id>/attendance/', views.view_intern_attendance, name='view_intern_attendance'),
+    # Academic Year CRUD
+    path('supervisor/academic-years/', views.academic_year_list, name='academic_year_list'),
+    path('supervisor/academic-year/create/', views.academic_year_create, name='academic_year_create'),
+    path('supervisor/academic-year/<int:pk>/update/', views.academic_year_update, name='academic_year_update'),
+    path('supervisor/academic-year/<int:pk>/delete/', views.academic_year_delete, name='academic_year_delete'),
+    # Semester CRUD
+    path('supervisor/semesters/', views.semester_list, name='semester_list'),
+    path('supervisor/semester/create/', views.semester_create, name='semester_create'),
+    path('supervisor/semester/<int:pk>/update/', views.semester_update, name='semester_update'),
+    path('supervisor/semester/<int:pk>/delete/', views.semester_delete, name='semester_delete'),
     #intern
     path('intern/change-password/', intern_change_password, name='intern_change_password'),
     path('intern/logout/', views.intern_logout, name='intern_logout'),

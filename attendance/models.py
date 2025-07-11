@@ -45,18 +45,71 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.email
-    
+
+# Academic Year Management
+class AcademicYear(models.Model):
+    name = models.CharField(max_length=20, unique=True)  # e.g., "2024-2025"
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['-name']
+
+# Semester Management
+class Semester(models.Model):
+    SEMESTER_CHOICES = (
+        ('1st Sem', '1st Semester'),
+        ('2nd Sem', '2nd Semester'),
+    )
+    name = models.CharField(max_length=10, choices=SEMESTER_CHOICES, unique=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['name']
+
+# Subject Management
+class Subject(models.Model):
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=20, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.code} - {self.name}" if self.code else self.name
+
+    class Meta:
+        ordering = ['name']
+
 #supervisor
 
 class Course(models.Model):
     name = models.CharField(max_length=100)
-    academic_year = models.CharField(max_length=20)
+    academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name='courses')
+    semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name='courses')
     course_code = models.CharField(max_length=20, blank=True, null=True)
     # Use settings.AUTH_USER_MODEL to avoid direct import of CustomUser
     supervisor = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='courses')
+    default_subjects = models.ManyToManyField(Subject, blank=True, related_name='courses')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.name} ({self.academic_year})"
+        return f"{self.name} ({self.academic_year.name} - {self.semester.name})"
+    
+    class Meta:
+        unique_together = ('name', 'academic_year', 'semester', 'supervisor')
+        ordering = ['-created_at']
     
 class CourseStudent(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='students')

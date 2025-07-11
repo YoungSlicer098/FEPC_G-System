@@ -25,6 +25,8 @@ from .models import Attendance
 from django.utils.timezone import now
 from django.utils import timezone
 from django.utils.timezone import localdate
+from .models import AcademicYear, Semester, Subject
+from django.views.decorators.http import require_http_methods
 
 # ---------- HOME VIEWS ----------
 
@@ -104,6 +106,19 @@ def supervisor_logout(request):
 @login_required
 def supervisor_dashboard(request):
     if request.user.role == 'supervisor':
+        # Create default academic years if none exist
+        if not AcademicYear.objects.exists():
+            current_year = timezone.now().year
+            for i in range(3):
+                year_start = current_year + i
+                year_end = year_start + 1
+                AcademicYear.objects.create(name=f"{year_start}-{year_end}")
+        
+        # Create default semesters if none exist
+        if not Semester.objects.exists():
+            Semester.objects.create(name="1st Sem")
+            Semester.objects.create(name="2nd Sem")
+        
         courses = Course.objects.filter(supervisor=request.user)
         return render(request, 'Supervisor/supervisor-dashboard.html', {'courses': courses})
     return redirect('supervisor_login')
@@ -114,20 +129,52 @@ def create_course(request):
     try:
         data = json.loads(request.body)
         name = data.get("name")
-        academic_year = data.get("academic_year")
+        course_code = data.get("course_code", "")
+        academic_year_id = data.get("academic_year")
+        semester_id = data.get("semester")
+        subjects_data = data.get("subjects", [])
 
+        # Validate required fields
+        if not name or not academic_year_id or not semester_id:
+            return JsonResponse({"status": "error", "message": "Missing required fields."}, status=400)
+
+        # Get AcademicYear and Semester objects
+        try:
+            academic_year = AcademicYear.objects.get(id=academic_year_id)
+            semester = Semester.objects.get(id=semester_id)
+        except (AcademicYear.DoesNotExist, Semester.DoesNotExist):
+            return JsonResponse({"status": "error", "message": "Invalid academic year or semester."}, status=400)
+
+        # Create the course
         course = Course.objects.create(
             name=name,
+            course_code=course_code,
             academic_year=academic_year,
+            semester=semester,
             supervisor=request.user
         )
+
+        # Add default subjects
+        for subject_data in subjects_data:
+            subject_name = subject_data.get("name")
+            subject_code = subject_data.get("code")
+            
+            if subject_name:
+                # Create or get existing subject
+                subject, created = Subject.objects.get_or_create(
+                    name=subject_name,
+                    defaults={'code': subject_code}
+                )
+                course.default_subjects.add(subject)
 
         return JsonResponse({
             "status": "success",
             "course": {
                 "id": course.id,
                 "name": course.name,
-                "academic_year": course.academic_year,
+                "course_code": course.course_code,
+                "academic_year": course.academic_year.name,
+                "semester": course.semester.name,
             }
         })
 
@@ -158,12 +205,48 @@ def update_course(request, course_id):
     try:
         data = json.loads(request.body)
         name = data.get("name")
-        academic_year = data.get("academic_year")
+        course_code = data.get("course_code", "")
+        academic_year_id = data.get("academic_year")
+        semester_id = data.get("semester")
+        subjects_data = data.get("subjects", [])
 
-        course = Course.objects.get(id=course_id, supervisor=request.user)
+        # Validate required fields
+        if not name or not academic_year_id or not semester_id:
+            return JsonResponse({"status": "error", "message": "Missing required fields."}, status=400)
+
+        # Get the course
+        try:
+            course = Course.objects.get(id=course_id, supervisor=request.user)
+        except Course.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Course not found."}, status=404)
+
+        # Get AcademicYear and Semester objects
+        try:
+            academic_year = AcademicYear.objects.get(id=academic_year_id)
+            semester = Semester.objects.get(id=semester_id)
+        except (AcademicYear.DoesNotExist, Semester.DoesNotExist):
+            return JsonResponse({"status": "error", "message": "Invalid academic year or semester."}, status=400)
+
+        # Update course fields
         course.name = name
+        course.course_code = course_code
         course.academic_year = academic_year
+        course.semester = semester
         course.save()
+
+        # Clear existing subjects and add new ones
+        course.default_subjects.clear()
+        for subject_data in subjects_data:
+            subject_name = subject_data.get("name")
+            subject_code = subject_data.get("code")
+            
+            if subject_name:
+                # Create or get existing subject
+                subject, created = Subject.objects.get_or_create(
+                    name=subject_name,
+                    defaults={'code': subject_code}
+                )
+                course.default_subjects.add(subject)
 
         return JsonResponse({"status": "success"})
 
@@ -502,3 +585,69 @@ def intern_profile_settings(request):
     return render(request, 'Intern/intern-profile-settings.html', {
         'course_student': course_student,
     })
+
+# Academic Year CRUD
+@login_required
+def academic_year_list(request):
+    # Placeholder: Return all academic years
+    years = list(AcademicYear.objects.all().values())
+    return JsonResponse({'academic_years': years})
+
+@login_required
+@require_http_methods(["POST"])
+def academic_year_create(request):
+    # Placeholder: Create a new academic year
+    data = json.loads(request.body)
+    name = data.get('name')
+    year = AcademicYear.objects.create(name=name)
+    return JsonResponse({'status': 'success', 'academic_year': {'id': year.id, 'name': year.name}})
+
+@login_required
+@require_http_methods(["POST"])
+def academic_year_update(request, pk):
+    # Placeholder: Update an academic year
+    data = json.loads(request.body)
+    name = data.get('name')
+    year = get_object_or_404(AcademicYear, pk=pk)
+    year.name = name
+    year.save()
+    return JsonResponse({'status': 'success'})
+
+@login_required
+@require_http_methods(["POST"])
+def academic_year_delete(request, pk):
+    # Placeholder: Delete an academic year (add warning logic in frontend)
+    year = get_object_or_404(AcademicYear, pk=pk)
+    year.delete()
+    return JsonResponse({'status': 'success'})
+
+# Semester CRUD
+@login_required
+def semester_list(request):
+    semesters = list(Semester.objects.all().values())
+    return JsonResponse({'semesters': semesters})
+
+@login_required
+@require_http_methods(["POST"])
+def semester_create(request):
+    data = json.loads(request.body)
+    name = data.get('name')
+    semester = Semester.objects.create(name=name)
+    return JsonResponse({'status': 'success', 'semester': {'id': semester.id, 'name': semester.name}})
+
+@login_required
+@require_http_methods(["POST"])
+def semester_update(request, pk):
+    data = json.loads(request.body)
+    name = data.get('name')
+    semester = get_object_or_404(Semester, pk=pk)
+    semester.name = name
+    semester.save()
+    return JsonResponse({'status': 'success'})
+
+@login_required
+@require_http_methods(["POST"])
+def semester_delete(request, pk):
+    semester = get_object_or_404(Semester, pk=pk)
+    semester.delete()
+    return JsonResponse({'status': 'success'})
