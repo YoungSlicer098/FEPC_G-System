@@ -84,6 +84,35 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     };
 
+    // COUNT TOTAL STRANDS 
+    function updateTotalStrandsCount() {
+    const courseItems = document.querySelectorAll('.courseItem');
+    const totalCountElement = document.getElementById('totalCoursesCount');
+    totalCountElement.textContent = courseItems.length;
+    }   
+
+    updateTotalStrandsCount();
+
+    //SEARCH STRANDS
+    function setupStrandSearch() {
+    const searchInput = document.getElementById("searchCourse");
+    const courseItems = document.querySelectorAll(".courseItem");
+
+    searchInput.addEventListener("input", () => {
+        const query = searchInput.value.toLowerCase().trim();
+
+        courseItems.forEach(item => {
+            const courseName = item.dataset.courseName?.toLowerCase() || "";
+            item.style.display = courseName.includes(query) ? "" : "none";
+        });
+
+        updateTotalStrandsCount(); // Optional: update visible total
+    });
+    }
+
+    setupStrandSearch();
+
+
     // Load Academic Years and Semesters
     async function loadAcademicYears() {
         try {
