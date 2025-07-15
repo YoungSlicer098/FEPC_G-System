@@ -40,6 +40,6 @@ urlpatterns = [
     path('student/profile-settings/', views.student_profile_settings, name='student_profile_settings'),
     path('supervisor/students/', views.student_masterlist, name='student_masterlist'),
     path('supervisor/students/add/', views.add_student_masterlist, name='add_student_masterlist'),
-    path('supervisor/students/<int:pk>/edit/', views.edit_student_masterlist, name='edit_student_masterlist'),
-    path('supervisor/students/<int:pk>/delete/', views.delete_student_masterlist, name='delete_student_masterlist'),
+    path('supervisor/students/<int:lrn>/edit/', views.edit_student_masterlist, name='edit_student_masterlist'),
+    path('supervisor/students/<int:lrn>/delete/', views.delete_student_masterlist, name='delete_student_masterlist'),
 ]

@@ -28,7 +28,7 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractUser):
     ROLE_CHOICES = (
         ('supervisor', 'Supervisor'),
-        ('student', 'student'),
+        ('student', 'Student'),
     )
     username = None  # <--- THIS REMOVES THE USERNAME FIELD
     email = models.EmailField(_('email address'), unique=True)
@@ -151,16 +151,39 @@ class Attendance(models.Model):
         return f"{self.student.email} - {self.date} ({self.status})"
 
 class StudentMasterlist(models.Model):
-    lrn = models.CharField(max_length=20, unique=True)
+    lrn = models.CharField(max_length=12, unique=True, primary_key=True)
     first_name = models.CharField(max_length=50)
     middle_initial = models.CharField(max_length=1, blank=True, null=True)
     last_name = models.CharField(max_length=50)
     email = models.EmailField(unique=True)
     gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female')])
     date_of_birth = models.DateField()
+    password = models.CharField(max_length=128, blank=True, null=True)  # Store initial password for reference
     user = models.OneToOneField(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def save(self, *args, **kwargs):
+        # Auto-fill password with capitalized last name if not set
+        if not self.password and self.last_name:
+            self.password = self.last_name.capitalize()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.lrn} - {self.last_name}, {self.first_name}"
+
+class StudentAuditLog(models.Model):
+    ACTION_CHOICES = (
+        ('add', 'Add'),
+        ('edit', 'Edit'),
+        ('delete', 'Delete'),
+    )
+    supervisor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, limit_choices_to={'role': 'supervisor'})
+    action = models.CharField(max_length=10, choices=ACTION_CHOICES)
+    student_lrn = models.CharField(max_length=20)
+    student_name = models.CharField(max_length=100)
+    details = models.TextField(blank=True)  # JSON or text summary of changes
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.get_action_display()} by {self.supervisor} on {self.student_lrn} at {self.timestamp}"

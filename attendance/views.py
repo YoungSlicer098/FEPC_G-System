@@ -27,9 +27,10 @@ from django.utils import timezone
 from django.utils.timezone import localdate
 from .models import AcademicYear, Semester, Subject
 from django.views.decorators.http import require_http_methods
-from .models import StudentMasterlist
+from .models import StudentMasterlist, StudentAuditLog
 from django.db import models
 import calendar
+from django.http import HttpResponseForbidden
 
 # ---------- HOME VIEWS ----------
 
@@ -80,22 +81,20 @@ def supervisor_register(request):
     return render(request, 'Home/supervisor-register.html')
 
 def student_login(request):
+    # Student login using LRN (student_id) as username
     if request.method == 'POST':
-        email = request.POST['email']
+        lrn = request.POST['lrn']
         password = request.POST['password']
-        user = authenticate(request, username=email, password=password)  # ✅ Correct usage
+        user = authenticate(request, username=lrn, password=password)  # Uses LRNAuthBackend
 
         if user is not None and user.role == 'student':
             login(request, user)
-
-            # 👇 Check if they must change password
             if user.must_change_password:
                 return redirect('student_change_password')
-
-            return redirect('student_dashboard')  # ✅ Already changed password
+            return redirect('student_dashboard')
         else:
             messages.error(request, 'Invalid credentials or not a student.')
-            return render(request, 'Home/student-login.html', {'email': email})
+            return render(request, 'Home/student-login.html', {'lrn': lrn})
 
     return render(request, 'Home/student-login.html')
 
@@ -360,6 +359,8 @@ def add_student(request):
 @csrf_exempt
 @require_POST
 def edit_student(request):
+    if request.user.role != 'supervisor':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
     try:
         data = json.loads(request.body)
         student_id = data.get('student_id')
@@ -397,6 +398,8 @@ def edit_student(request):
 @csrf_exempt
 @require_POST
 def delete_student(request):
+    if request.user.role != 'supervisor':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
     try:
         data = json.loads(request.body)
         student_id = data.get('student_id')
@@ -417,6 +420,8 @@ def delete_student(request):
     
 @login_required
 def view_student_attendance(request, student_id):
+    if request.user.role != 'supervisor':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
     student = get_object_or_404(CustomUser, id=student_id, role='student')
 
      # 🔧 Get the course_id from CourseStudent relation
@@ -464,6 +469,8 @@ def view_student_attendance(request, student_id):
 
 @login_required
 def student_change_password(request):
+    if request.user.role != 'student':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
     if request.method == 'POST':
         new_password = request.POST.get('new_password')
         confirm_password = request.POST.get('confirm_password')
@@ -489,6 +496,8 @@ def student_change_password(request):
 
 
 def student_logout(request):
+    if request.user.role != 'student':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
     logout(request)
     return redirect('student_login')
 
@@ -496,6 +505,8 @@ def student_logout(request):
 
 @login_required
 def student_dashboard(request):
+    if request.user.role != 'student':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
     student = request.user
 
     # Get month filter from GET
@@ -544,6 +555,8 @@ def student_dashboard(request):
 
 @login_required
 def student_time_in(request):
+    if request.user.role != 'student':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
     student = request.user
     now = timezone.localtime(timezone.now())  # Ensure local timezone (Asia/Manila)
     today = now.date()
@@ -566,6 +579,8 @@ def student_time_in(request):
 
 @login_required
 def student_time_out(request):
+    if request.user.role != 'student':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
     student = request.user
     now = timezone.localtime(timezone.now())  # Use local time
     today = now.date()
@@ -584,6 +599,8 @@ def student_time_out(request):
 
 @login_required
 def student_profile_settings(request):
+    if request.user.role != 'student':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
     course_student = CourseStudent.objects.filter(student=request.user).first()
     return render(request, 'Student/student-profile-settings.html', {
         'course_student': course_student,
@@ -592,6 +609,8 @@ def student_profile_settings(request):
 # Academic Year CRUD
 @login_required
 def academic_year_list(request):
+    if request.user.role != 'supervisor':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
     # Placeholder: Return all academic years
     years = list(AcademicYear.objects.all().values())
     return JsonResponse({'academic_years': years})
@@ -599,6 +618,8 @@ def academic_year_list(request):
 @login_required
 @require_http_methods(["POST"])
 def academic_year_create(request):
+    if request.user.role != 'supervisor':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
     # Placeholder: Create a new academic year
     data = json.loads(request.body)
     name = data.get('name')
@@ -608,6 +629,8 @@ def academic_year_create(request):
 @login_required
 @require_http_methods(["POST"])
 def academic_year_update(request, pk):
+    if request.user.role != 'supervisor':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
     # Placeholder: Update an academic year
     data = json.loads(request.body)
     name = data.get('name')
@@ -619,6 +642,8 @@ def academic_year_update(request, pk):
 @login_required
 @require_http_methods(["POST"])
 def academic_year_delete(request, pk):
+    if request.user.role != 'supervisor':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
     # Placeholder: Delete an academic year (add warning logic in frontend)
     year = get_object_or_404(AcademicYear, pk=pk)
     year.delete()
@@ -627,6 +652,8 @@ def academic_year_delete(request, pk):
 # Semester CRUD
 @login_required
 def semester_list(request):
+    if request.user.role != 'supervisor':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
     semesters = list(Semester.objects.all().values())
     return JsonResponse({'semesters': semesters})
 
@@ -641,6 +668,8 @@ def semester_create(request):
 @login_required
 @require_http_methods(["POST"])
 def semester_update(request, pk):
+    if request.user.role != 'supervisor':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
     data = json.loads(request.body)
     name = data.get('name')
     semester = get_object_or_404(Semester, pk=pk)
@@ -651,12 +680,16 @@ def semester_update(request, pk):
 @login_required
 @require_http_methods(["POST"])
 def semester_delete(request, pk):
+    if request.user.role != 'supervisor':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
     semester = get_object_or_404(Semester, pk=pk)
     semester.delete()
     return JsonResponse({'status': 'success'})
 
 @login_required
 def student_masterlist(request):
+    if request.user.role != 'supervisor':
+        return HttpResponseForbidden('You are not authorized to access this page.')
     query = request.GET.get('q', '')
     filter_strand = request.GET.get('strand', '')
     filter_gender = request.GET.get('gender', '')
@@ -668,7 +701,8 @@ def student_masterlist(request):
         students = students.filter(
             models.Q(lrn__icontains=query) |
             models.Q(first_name__icontains=query) |
-            models.Q(last_name__icontains=query)
+            models.Q(last_name__icontains=query) |
+            models.Q(email__icontains=query)
         )
     if filter_strand:
         students = students.filter(user__coursestudent__course__id=filter_strand)
@@ -693,15 +727,32 @@ def student_masterlist(request):
 
 @login_required
 def add_student_masterlist(request):
+    if request.user.role != 'supervisor':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
     if request.method == 'POST':
         data = json.loads(request.body)
-        lrn = data.get('lrn')
-        first_name = data.get('first_name')
-        middle_initial = data.get('middle_initial', '')
-        last_name = data.get('last_name')
-        email = data.get('email')
-        gender = data.get('gender')
-        date_of_birth = data.get('date_of_birth')
+        lrn = data.get('lrn', '').strip()
+        first_name = data.get('first_name', '').strip()
+        middle_initial = data.get('middle_initial', '').strip()
+        last_name = data.get('last_name', '').strip()
+        email = data.get('email', '').strip()
+        gender = data.get('gender', '').strip()
+        date_of_birth = data.get('date_of_birth', '').strip()
+        # --- Validation ---
+        if not lrn or not first_name or not last_name or not email or not gender or not date_of_birth:
+            return JsonResponse({'success': False, 'error': 'All required fields must be filled.'})
+        if not lrn.isdigit() or len(lrn) != 12:
+            return JsonResponse({'success': False, 'error': 'LRN must be a 12-digit number.'})
+        if StudentMasterlist.objects.filter(lrn=lrn).exists():
+            return JsonResponse({'success': False, 'error': 'LRN already exists.'})
+        if StudentMasterlist.objects.filter(email=email).exists():
+            return JsonResponse({'success': False, 'error': 'Email already exists.'})
+        from django.core.validators import validate_email
+        from django.core.exceptions import ValidationError
+        try:
+            validate_email(email)
+        except ValidationError:
+            return JsonResponse({'success': False, 'error': 'Invalid email address.'})
         password = last_name.capitalize()
         user = CustomUser.objects.create_user(
             email=email,
@@ -722,6 +773,14 @@ def add_student_masterlist(request):
             date_of_birth=date_of_birth,
             user=user
         )
+        # --- Audit Log ---
+        StudentAuditLog.objects.create(
+            supervisor=request.user,
+            action='add',
+            student_lrn=lrn,
+            student_name=f"{last_name}, {first_name}",
+            details=f"Added student with LRN {lrn} and email {email}."
+        )
         return JsonResponse({'success': True, 'student': {
             'id': student.id,
             'lrn': student.lrn,
@@ -736,16 +795,57 @@ def add_student_masterlist(request):
 
 @login_required
 def edit_student_masterlist(request, pk):
+    if request.user.role != 'supervisor':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
     student = get_object_or_404(StudentMasterlist, pk=pk)
     if request.method == 'POST':
         data = json.loads(request.body)
-        student.lrn = data.get('lrn', student.lrn)
-        student.first_name = data.get('first_name', student.first_name)
-        student.middle_initial = data.get('middle_initial', student.middle_initial)
-        student.last_name = data.get('last_name', student.last_name)
-        student.email = data.get('email', student.email)
-        student.gender = data.get('gender', student.gender)
-        student.date_of_birth = data.get('date_of_birth', student.date_of_birth)
+        lrn = data.get('lrn', student.lrn).strip()
+        first_name = data.get('first_name', student.first_name).strip()
+        middle_initial = data.get('middle_initial', student.middle_initial).strip() if data.get('middle_initial') is not None else student.middle_initial
+        last_name = data.get('last_name', student.last_name).strip()
+        email = data.get('email', student.email).strip()
+        gender = data.get('gender', student.gender).strip()
+        date_of_birth = data.get('date_of_birth', student.date_of_birth)
+        # --- Validation ---
+        if not lrn or not first_name or not last_name or not email or not gender or not date_of_birth:
+            return JsonResponse({'success': False, 'error': 'All required fields must be filled.'})
+        if not lrn.isdigit() or len(lrn) != 12:
+            return JsonResponse({'success': False, 'error': 'LRN must be a 12-digit number.'})
+        if StudentMasterlist.objects.filter(lrn=lrn).exclude(pk=pk).exists():
+            return JsonResponse({'success': False, 'error': 'LRN already exists.'})
+        if StudentMasterlist.objects.filter(email=email).exclude(pk=pk).exists():
+            return JsonResponse({'success': False, 'error': 'Email already exists.'})
+        from django.core.validators import validate_email
+        from django.core.exceptions import ValidationError
+        try:
+            validate_email(email)
+        except ValidationError:
+            return JsonResponse({'success': False, 'error': 'Invalid email address.'})
+        # --- Audit log: capture changes ---
+        changes = []
+        if student.lrn != lrn:
+            changes.append(f"LRN: {student.lrn} → {lrn}")
+        if student.first_name != first_name:
+            changes.append(f"First Name: {student.first_name} → {first_name}")
+        if student.middle_initial != middle_initial:
+            changes.append(f"Middle Initial: {student.middle_initial} → {middle_initial}")
+        if student.last_name != last_name:
+            changes.append(f"Last Name: {student.last_name} → {last_name}")
+        if student.email != email:
+            changes.append(f"Email: {student.email} → {email}")
+        if student.gender != gender:
+            changes.append(f"Gender: {student.gender} → {gender}")
+        if str(student.date_of_birth) != str(date_of_birth):
+            changes.append(f"Date of Birth: {student.date_of_birth} → {date_of_birth}")
+        # --- Save changes ---
+        student.lrn = lrn
+        student.first_name = first_name
+        student.middle_initial = middle_initial
+        student.last_name = last_name
+        student.email = email
+        student.gender = gender
+        student.date_of_birth = date_of_birth
         student.save()
         # Update user as well
         if student.user:
@@ -754,15 +854,37 @@ def edit_student_masterlist(request, pk):
             student.user.last_name = student.last_name
             student.user.student_id = student.lrn
             student.user.save()
+        # --- Audit Log ---
+        StudentAuditLog.objects.create(
+            supervisor=request.user,
+            action='edit',
+            student_lrn=lrn,
+            student_name=f"{last_name}, {first_name}",
+            details="; ".join(changes) if changes else "No changes."
+        )
         return JsonResponse({'success': True})
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
 @login_required
-def delete_student_masterlist(request, pk):
-    student = get_object_or_404(StudentMasterlist, pk=pk)
+def delete_student_masterlist(request, lrn):
+    if request.user.role != 'supervisor':
+        return HttpResponseForbidden('You are not authorized to perform this action.')
+    try: 
+        student = get_object_or_404(StudentMasterlist, pk=lrn)
+    except StudentMasterlist.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Student not found.'}, status=404)
     if request.method == 'POST':
+        name = f"{student.last_name}, {student.first_name}"
         if student.user:
             student.user.delete()
         student.delete()
+        # --- Audit Log ---
+        StudentAuditLog.objects.create(
+            supervisor=request.user,
+            action='delete',
+            student_lrn=lrn,
+            student_name=name,
+            details="Student deleted."
+        )
         return JsonResponse({'success': True})
     return JsonResponse({'success': False, 'error': 'Invalid request'})

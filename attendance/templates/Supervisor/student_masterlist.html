@@ -239,11 +239,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 addModal.classList.add('hidden');
                 location.reload();
             } else {
-                alert(data.error || 'Failed to add student');
+                // Show error message in modal
+                showAddStudentError(data.error || 'Failed to add student');
             }
         });
     };
-
+    function showAddStudentError(msg) {
+        let err = document.getElementById('addStudentError');
+        if (!err) {
+            err = document.createElement('div');
+            err.id = 'addStudentError';
+            err.className = 'text-red-600 text-sm mb-2';
+            addForm.insertBefore(err, addForm.firstChild);
+        }
+        err.textContent = msg;
+    }
     // --- Edit Student ---
     window.openEditStudentModal = function(student) {
         document.getElementById('editStudentId').value = student.id;
@@ -255,8 +265,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('editGender').value = student.gender;
         document.getElementById('editDOB').value = student.date_of_birth;
         editModal.classList.remove('hidden');
+        clearEditStudentError();
     };
-
     editForm.onsubmit = function(e) {
         e.preventDefault();
         const id = document.getElementById('editStudentId').value;
@@ -280,18 +290,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 editModal.classList.add('hidden');
                 location.reload();
             } else {
-                alert(data.error || 'Failed to edit student');
+                showEditStudentError(data.error || 'Failed to edit student');
             }
         });
     };
-
+    function showEditStudentError(msg) {
+        let err = document.getElementById('editStudentError');
+        if (!err) {
+            err = document.createElement('div');
+            err.id = 'editStudentError';
+            err.className = 'text-red-600 text-sm mb-2';
+            editForm.insertBefore(err, editForm.firstChild);
+        }
+        err.textContent = msg;
+    }
+    function clearEditStudentError() {
+        let err = document.getElementById('editStudentError');
+        if (err) err.remove();
+    }
     // --- Delete Student ---
-    window.openDeleteStudentModal = function(id) {
-        deleteId = id;
+    window.openDeleteStudentModal = function(lrn) {
+        deleteLRN = lrn;
         deleteModal.classList.remove('hidden');
+        clearDeleteStudentError();
     };
     confirmDelete.onclick = function() {
-        fetch(`/supervisor/students/${deleteId}/delete/`, {
+        fetch(`/supervisor/students/${deleteLRN}/delete/`, {
             method: "POST",
             headers: {
                 "X-CSRFToken": csrftoken
@@ -301,10 +325,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 deleteModal.classList.add('hidden');
                 location.reload();
             } else {
-                alert(data.error || 'Failed to delete student');
+                showDeleteStudentError(data.error || 'Failed to delete student');
             }
         });
     };
+    function showDeleteStudentError(msg) {
+        let err = document.getElementById('deleteStudentError');
+        if (!err) {
+            err = document.createElement('div');
+            err.id = 'deleteStudentError';
+            err.className = 'text-red-600 text-sm mb-2';
+            deleteModal.querySelector('.mb-6').after(err);
+        }
+        err.textContent = msg;
+    }
+    function clearDeleteStudentError() {
+        let err = document.getElementById('deleteStudentError');
+        if (err) err.remove();
+    }
 
     // --- Attach Edit/Delete Button Events ---
     function attachRowEvents() {
@@ -326,14 +364,46 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.deleteBtn').forEach(btn => {
             btn.onclick = function() {
                 const row = btn.closest('tr');
-                window.openDeleteStudentModal(row.dataset.id);
+                window.openDeleteStudentModal(row.querySelector('.lrn').textContent.trim());
             };
         });
     }
     attachRowEvents();
 
-    // --- Re-attach events after AJAX table reload (if you use live search/filter) ---
-    // If you use AJAX to update the table, call attachRowEvents() after updating the table body.
+    // --- Filter and Search Bar AJAX ---
+    const searchInput = document.getElementById('searchStudent');
+    const filterStrand = document.getElementById('filterStrand');
+    const filterGender = document.getElementById('filterGender');
+    const filterMonth = document.getElementById('filterMonth');
+    const studentList = document.getElementById('studentList');
+
+    function showLoading() {
+        studentList.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-500">Loading...</td></tr>';
+    }
+
+    function fetchStudents() {
+        showLoading();
+        const params = new URLSearchParams({
+            q: searchInput.value,
+            strand: filterStrand.value,
+            gender: filterGender.value,
+            month: filterMonth.value
+        });
+        fetch(`/supervisor/students/?${params.toString()}`)
+            .then(r => r.text())
+            .then(html => {
+                // Replace only the table body
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newTbody = doc.getElementById('studentList');
+                studentList.innerHTML = newTbody.innerHTML;
+                attachRowEvents();
+            });
+    }
+    searchInput.oninput = fetchStudents;
+    filterStrand.onchange = fetchStudents;
+    filterGender.onchange = fetchStudents;
+    filterMonth.onchange = fetchStudents;
 });
 </script>
 </body>

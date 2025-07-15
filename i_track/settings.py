@@ -131,6 +131,10 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+AUTHENTICATION_BACKENDS = [
+    'attendance.auth_backends.LRNAuthBackend',
+    'django.contrib.auth.backends.ModelBackend',  # fallback
+]
 
 
 # Internationalization
