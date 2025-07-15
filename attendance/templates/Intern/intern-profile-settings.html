@@ -19,13 +19,13 @@
   </div>
     <ul class="space-y-4">
       <li>
-        <a href="{% url 'intern_dashboard' %}" class="block py-2 px-4 rounded hover:bg-yellow-600">🏠 Dashboard</a>
+        <a href="{% url 'intern_dashboard' %}" class="block py-2 px-4 rounded hover:bg-yellow-500">🏠 Dashboard</a>
       </li>
       <li>
-        <a href="{% url 'intern_profile_settings' %}" class="block py-2 px-4 rounded bg-yellow-600">⚙️ Profile & Settings</a>
+        <a href="{% url 'intern_profile_settings' %}" class="block py-2 px-4 rounded bg-yellow-500">⚙️ Profile & Settings</a>
       </li>
       <li>
-        <button onclick="openLogoutModal()" class="w-full text-left py-2 px-4 rounded hover:bg-red-600">🚪 Logout</button>
+        <button onclick="openLogoutModal()" class="w-full text-left py-2 px-4 rounded hover:bg-red-500">🚪 Logout</button>
       </li>
     </ul>
   </aside>
@@ -60,9 +60,9 @@
         <h2 class="text-2xl font-semibold mb-4">Profile Information</h2>
         <p><strong>Email:</strong> {{ user.email }}</p>
         {% if course_student %}
-          <p><strong>Course:</strong> {{ course_student.course.name }} <i class="text-gray-500 text-sm">({{ course_student.course.academic_year }})</i></p>
+          <p><strong>Strand:</strong> {{ course_student.course.name }} <i class="text-gray-500 text-sm">({{ course_student.course.academic_year }})</i></p>
         {% else %}
-          <p><strong>Course:</strong> Not enrolled in any course</p>
+          <p><strong>Strand:</strong> Not enrolled in any course</p>
         {% endif %}
         <p><strong>Role:</strong> {{ user.role|capfirst }}</p>
         <p><strong>Date Joined:</strong> {{ user.date_joined|date:"F j, Y" }}</p>
@@ -107,7 +107,7 @@
       </div>
       <div class="flex justify-end space-x-2 mt-4">
         <button type="button" onclick="closeChangePasswordModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
-        <button type="submit" class="bg-blue-700 text-white px-6 py-2 rounded hover:bg-blue-600">Change Password</button>
+        <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-yellow-500">Change Password</button>
       </div>
     </form>
   </div>

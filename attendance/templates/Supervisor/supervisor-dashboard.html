@@ -31,9 +31,16 @@
 
         <!-- Top Bar (mobile only) -->
         <header class="lg:hidden flex items-center justify-between bg-green-600 p-4 shadow-md">
-            <h1 class="text-xl font-bold text-white">I-TRACK</h1>
+            <!-- Logo + Brand Name -->
+            <div class="flex items-center space-x-2">
+                <img src="{% static 'assets/fepclogo.png' %}" alt="Logo" class="w-8 h-8 rounded-full">
+                <h1 class="text-xl font-bold text-white">G-System</h1>
+            </div>
+
+            <!-- Menu Button -->
             <button id="menuBtn" class="text-white text-2xl focus:outline-none">☰</button>
         </header>
+
 
         <!-- Main content -->
         <main class="p-6 overflow-y-auto flex-1">
@@ -52,6 +59,7 @@
                 </div>
             </div>
 
+
             <!-- Course Management Section -->
             <div class="mt-8">
                 <h2 class="text-2xl font-bold mb-4">📚 Strands</h2>
@@ -60,6 +68,15 @@
                     <button id="manageCoursesBtn" class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600">⚙️ Manage Strand</button>
                     <button id="manageAcademicYearsBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">📅 Academic Years</button>
                     <button id="manageSemestersBtn" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">📚 Semesters</button>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="mb-4">
+                    <input
+                        type="text"
+                        id="searchCourse"
+                        placeholder="Search strands..."
+                        class="w-full p-3 border rounded shadow"/>
                 </div>
 
                 <!-- Course List -->
