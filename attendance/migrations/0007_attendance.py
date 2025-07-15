@@ -23,10 +23,10 @@ class Migration(migrations.Migration):
                 ('location_in', models.CharField(blank=True, max_length=255)),
                 ('location_out', models.CharField(blank=True, max_length=255)),
                 ('status', models.CharField(choices=[('Present', 'Present'), ('Late', 'Late'), ('Absent', 'Absent')], default='Absent', max_length=10)),
-                ('intern', models.ForeignKey(limit_choices_to={'role': 'intern'}, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('student', models.ForeignKey(limit_choices_to={'role': 'student'}, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
-                'unique_together': {('intern', 'date')},
+                'unique_together': {('student', 'date')},
             },
         ),
     ]

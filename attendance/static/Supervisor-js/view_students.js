@@ -163,7 +163,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     </td>
                     <td class="p-3 text-center space-x-2">
                         <button class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 profileBtn">Profile</button>
-                        <a href="/supervisor/interns/${studentID}/attendance/" class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">Attendance</a>
+                        <a href="/supervisor/students/${studentID}/attendance/" class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">Attendance</a>
                         <span class="student-email hidden">${studentEmail}</span>
                     </td>
                 `;

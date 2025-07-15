@@ -12,7 +12,7 @@ class CustomUserManager(BaseUserManager):
         if not email:
             raise ValueError("The Email must be set")
         email = self.normalize_email(email)
-        extra_fields.setdefault('role', 'intern')
+        extra_fields.setdefault('role', 'student')
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -28,7 +28,7 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractUser):
     ROLE_CHOICES = (
         ('supervisor', 'Supervisor'),
-        ('intern', 'Intern'),
+        ('student', 'student'),
     )
     username = None  # <--- THIS REMOVES THE USERNAME FIELD
     email = models.EmailField(_('email address'), unique=True)
@@ -113,7 +113,7 @@ class Course(models.Model):
     
 class CourseStudent(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='students')
-    student = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'role': 'intern'})
+    student = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'role': 'student'})
     date_added = models.DateField(auto_now_add=True)
 
     def __str__(self):
@@ -123,13 +123,13 @@ class CourseStudent(models.Model):
 class Meta:
     unique_together = ('name', 'academic_year', 'supervisor')
 
-#intern
+#student
 
 class Attendance(models.Model):
-    intern = models.ForeignKey(
+    student = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        limit_choices_to={'role': 'intern'}
+        limit_choices_to={'role': 'student'}
     )
     date = models.DateField(default=timezone.now)
     time_in = models.TimeField(null=True, blank=True)
@@ -145,7 +145,22 @@ class Attendance(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Absent')
 
     class Meta:
-        unique_together = ('intern', 'date')  # Prevent duplicate entries per day
+        unique_together = ('student', 'date')  # Prevent duplicate entries per day
 
     def __str__(self):
-        return f"{self.intern.email} - {self.date} ({self.status})"
+        return f"{self.student.email} - {self.date} ({self.status})"
+
+class StudentMasterlist(models.Model):
+    lrn = models.CharField(max_length=20, unique=True)
+    first_name = models.CharField(max_length=50)
+    middle_initial = models.CharField(max_length=1, blank=True, null=True)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField(unique=True)
+    gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female')])
+    date_of_birth = models.DateField()
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.lrn} - {self.last_name}, {self.first_name}"

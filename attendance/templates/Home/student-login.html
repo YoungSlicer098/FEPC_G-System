@@ -1,0 +1,92 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Login - G-System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('{% static "assets/fepcbg.jpg" %}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center h-screen">
+
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <!-- Title -->
+        <h2 class="text-3xl font-bold text-green-900 text-center mb-4">Student Login</h2>
+        <p class="text-gray-600 text-center mb-6">Enter your LRN and Last Name to access your account.</p>
+
+        <!-- Login Form -->
+        <form method="POST" action="{% url 'student_login' %}">
+            {% csrf_token %}
+            <!-- LRN Field -->
+            <div class="mb-4">
+                <label for="lrn" class="block text-gray-700 font-medium">LRN</label>
+                <input type="text" placeholder="Enter your LRN" value="{{ lrn }}" id="lrn" name="lrn" required
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+            </div>
+
+            <!-- Password Field (Last Name) -->
+            <div class="mb-4">
+                <label for="password" class="block text-gray-700 font-medium">Password (Last Name, Capitalized)</label>
+                <input type="password" placeholder="Enter your Last Name (Capitalized)" id="password" name="password" required
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                <i id="toggleIcon" onclick="togglePassword()" 
+                    class="fas fa-eye absolute top-11 right-4 cursor-pointer text-gray-500"></i>
+            </div>
+           {% if messages %}
+            <div class="p-1 mb-2">
+                {% for message in messages %}
+                    {% if message.tags == "success" %}
+                        <p class="text-green-500">{{ message }}</p>
+                    {% elif message.tags == "error" %}
+                        <p class="text-red-500">{{ message }}</p>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Forgot Password (optional, can be hidden for students) -->
+            <!--
+            <div class="text-right mb-4">
+                <a href="{% url 'password_reset' %}" class="text-green-600 hover:underline text-sm hover:underline hover:text-yellow-500 transition">Forgot Password?</a>
+            </div>
+            -->
+
+            <!-- Login Button -->
+            <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg shadow-md font-semibold hover:bg-yellow-500 transition">
+                Login
+            </button>
+        </form>
+
+        <!-- Back to Home Button -->
+        <div class="mt-6 text-center">
+            <a href="{% url 'home' %}" class="text-gray-600 hover:text-blue-600 transition hover:underline hover:text-yellow-500 transition">← Back to Home</a>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const password = document.getElementById("password");
+            const icon = document.getElementById("toggleIcon");
+
+            if (password.type === "password") {
+            password.type = "text";
+            icon.classList.remove("fa-eye");
+            icon.classList.add("fa-eye-slash");
+            } else {
+            password.type = "password";
+            icon.classList.remove("fa-eye-slash");
+            icon.classList.add("fa-eye");
+            }
+        }
+    </script>
+
+</body>
+</html> 

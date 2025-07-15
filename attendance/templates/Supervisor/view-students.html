@@ -22,11 +22,12 @@
     <!-- Sidebar -->
     <aside id="sidebar" class="fixed lg:relative z-40 lg:z-auto top-0 left-0 w-64 h-full bg-green-600 text-white p-6 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
         <div class="flex items-center space-x-3 mb-6">
-        <img src="{% static 'assets/fepclogo.png' %}" alt="Logo" class="w-12 h-12 rounded-full">
-        <h2 class="text-2xl font-bold">G-System</h2>
-        </div>
+            <img src="{% static 'assets/fepclogo.png' %}" alt="Logo" class="w-12 h-12 rounded-full">
+            <h2 class="text-2xl font-bold">G-System</h2>
+            </div>
         <ul class="space-y-4">
             <li><a href="{% url 'supervisor_dashboard' %}" class="block py-2 px-4 rounded hover:bg-yellow-500">🏠 Dashboard</a></li>
+            <li><a href="{% url 'student_masterlist' %}" class="block py-2 px-4 rounded hover:bg-yellow-500">👥 Students</a></li>
             <li><a href="{% url 'supervisor_profile' %}" class="block py-2 px-4 rounded hover:bg-yellow-500">⚙️ Profile & Settings</a></li>
             <li><button onclick="openLogoutModal()" class="w-full text-left py-2 px-4 rounded hover:bg-red-600">🚪 Logout</button></li>
         </ul>
@@ -77,7 +78,7 @@
                             </td>
                             <td class="p-3 text-center space-x-2">
                                 <button class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 profileBtn">Profile</button>
-                                <a href="{% url 'view_intern_attendance' student.id %}" class="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700">Attendance</a>
+                                <a href="{% url 'view_student_attendance' student.id %}" class="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700">Attendance</a>
                                 <span class="student-email hidden">{{ student.email }}</span>
                             </td>
                         </tr>

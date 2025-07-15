@@ -27,6 +27,9 @@ from django.utils import timezone
 from django.utils.timezone import localdate
 from .models import AcademicYear, Semester, Subject
 from django.views.decorators.http import require_http_methods
+from .models import StudentMasterlist
+from django.db import models
+import calendar
 
 # ---------- HOME VIEWS ----------
 
@@ -76,25 +79,25 @@ def supervisor_register(request):
 
     return render(request, 'Home/supervisor-register.html')
 
-def intern_login(request):
+def student_login(request):
     if request.method == 'POST':
         email = request.POST['email']
         password = request.POST['password']
         user = authenticate(request, username=email, password=password)  # ✅ Correct usage
 
-        if user is not None and user.role == 'intern':
+        if user is not None and user.role == 'student':
             login(request, user)
 
             # 👇 Check if they must change password
             if user.must_change_password:
-                return redirect('intern_change_password')
+                return redirect('student_change_password')
 
-            return redirect('intern_dashboard')  # ✅ Already changed password
+            return redirect('student_dashboard')  # ✅ Already changed password
         else:
-            messages.error(request, 'Invalid credentials or not an intern.')
-            return render(request, 'Home/intern-login.html', {'email': email})
+            messages.error(request, 'Invalid credentials or not a student.')
+            return render(request, 'Home/student-login.html', {'email': email})
 
-    return render(request, 'Home/intern-login.html')
+    return render(request, 'Home/student-login.html')
 
 
 def supervisor_logout(request):
@@ -339,7 +342,7 @@ def add_student(request):
             student_id=student_id,
             first_name=first_name,
             last_name=last_name,
-            role='intern',
+            role='student',
             must_change_password=True
         )
 
@@ -364,7 +367,7 @@ def edit_student(request):
         email = data.get('email')
         password = data.get('password')
 
-        student = CustomUser.objects.get(student_id=student_id, role='intern')
+        student = CustomUser.objects.get(student_id=student_id, role='student')
 
         # Update name
         name_parts = name.strip().split(' ', 1)
@@ -399,7 +402,7 @@ def delete_student(request):
         student_id = data.get('student_id')
 
         # Check if student exists
-        student = CustomUser.objects.get(student_id=student_id, role='intern')
+        student = CustomUser.objects.get(student_id=student_id, role='student')
         
         # Perform deletion
         student.delete()
@@ -413,11 +416,11 @@ def delete_student(request):
         return JsonResponse({'success': False, 'error': f'An unexpected error occurred: {str(e)}'})
     
 @login_required
-def view_intern_attendance(request, intern_id):
-    intern = get_object_or_404(CustomUser, id=intern_id, role='intern')
+def view_student_attendance(request, student_id):
+    student = get_object_or_404(CustomUser, id=student_id, role='student')
 
      # 🔧 Get the course_id from CourseStudent relation
-    course_student = CourseStudent.objects.filter(student=intern).first()
+    course_student = CourseStudent.objects.filter(student=student).first()
     course_id = course_student.course.id if course_student else None
 
     # Filter by selected month
@@ -425,12 +428,12 @@ def view_intern_attendance(request, intern_id):
     if month:
         year, month_num = map(int, month.split('-'))
         attendance_records = Attendance.objects.filter(
-            intern=intern,
+            student=student,
             date__year=year,
             date__month=month_num
         ).order_by('-date')
     else:
-        attendance_records = Attendance.objects.filter(intern=intern).order_by('-date')
+        attendance_records = Attendance.objects.filter(student=student).order_by('-date')
 
     present_count = attendance_records.filter(status="Present").count()
     late_count = attendance_records.filter(status="Late").count()
@@ -442,10 +445,10 @@ def view_intern_attendance(request, intern_id):
     attendance_percentage = round((effective_attendance / total) * 100, 2) if total > 0 else 100.0
 
     today = localdate()
-    today_attendance = Attendance.objects.filter(intern=intern, date=today).first()
+    today_attendance = Attendance.objects.filter(student=student, date=today).first()
 
     return render(request, 'Supervisor/attendance-view.html', {
-        'student': intern,
+        'student': student,
         'attendance_records': attendance_records,
         'present_count': present_count,
         'late_count': late_count,
@@ -457,17 +460,17 @@ def view_intern_attendance(request, intern_id):
 
 
 
-# ---------- INTERN VIEWS ----------
+# ---------- STUDENT VIEWS ----------
 
 @login_required
-def intern_change_password(request):
+def student_change_password(request):
     if request.method == 'POST':
         new_password = request.POST.get('new_password')
         confirm_password = request.POST.get('confirm_password')
 
         if new_password != confirm_password:
             messages.error(request, "Passwords do not match.")
-            return redirect('intern_change_password')
+            return redirect('student_change_password')
 
         user = request.user
         user.set_password(new_password)
@@ -479,39 +482,39 @@ def intern_change_password(request):
 
         logout(request)
         messages.success(request, "Password changed successfully. Please log in again.")
-        return redirect('intern_login')
+        return redirect('student_login')
 
-    return render(request, 'Intern/intern-change-password.html')
+    return render(request, 'Student/student-change-password.html')
 
 
 
-def intern_logout(request):
+def student_logout(request):
     logout(request)
-    return redirect('intern_login')
+    return redirect('student_login')
 
 
 
 @login_required
-def intern_dashboard(request):
-    intern = request.user
+def student_dashboard(request):
+    student = request.user
 
     # Get month filter from GET
     month = request.GET.get('month')
     today = now().date()
 
     # Today's attendance
-    today_attendance = Attendance.objects.filter(intern=intern, date=today).first()
+    today_attendance = Attendance.objects.filter(student=student, date=today).first()
 
     # Monthly records
     if month:
         year, month = map(int, month.split('-'))
         attendance_records = Attendance.objects.filter(
-            intern=intern,
+            student=student,
             date__year=year,
             date__month=month
         )
     else:
-        attendance_records = Attendance.objects.filter(intern=intern)
+        attendance_records = Attendance.objects.filter(student=student)
 
     total_present = attendance_records.filter(status='Present').count()
     total_late = attendance_records.filter(status='Late').count()
@@ -537,16 +540,16 @@ def intern_dashboard(request):
         "has_timed_out": bool(today_attendance and today_attendance.time_out),
     }
 
-    return render(request, 'Intern/intern-dashboard.html', context)
+    return render(request, 'Student/student-dashboard.html', context)
 
 @login_required
-def intern_time_in(request):
-    intern = request.user
+def student_time_in(request):
+    student = request.user
     now = timezone.localtime(timezone.now())  # Ensure local timezone (Asia/Manila)
     today = now.date()
 
     # Check if already timed in
-    attendance, created = Attendance.objects.get_or_create(intern=intern, date=today)
+    attendance, created = Attendance.objects.get_or_create(student=student, date=today)
 
     if attendance.time_in is None:
         current_time = now.time()
@@ -559,16 +562,16 @@ def intern_time_in(request):
         attendance.status = "Late" if current_time > late_time else "Present"
         attendance.save()
 
-    return redirect('intern_dashboard')
+    return redirect('student_dashboard')
 
 @login_required
-def intern_time_out(request):
-    intern = request.user
+def student_time_out(request):
+    student = request.user
     now = timezone.localtime(timezone.now())  # Use local time
     today = now.date()
 
     try:
-        attendance = Attendance.objects.get(intern=intern, date=today)
+        attendance = Attendance.objects.get(student=student, date=today)
 
         if attendance.time_out is None:
             attendance.time_out = now.time()
@@ -577,12 +580,12 @@ def intern_time_out(request):
     except Attendance.DoesNotExist:
         pass  # Do nothing if not timed in yet
 
-    return redirect('intern_dashboard')
+    return redirect('student_dashboard')
 
 @login_required
-def intern_profile_settings(request):
+def student_profile_settings(request):
     course_student = CourseStudent.objects.filter(student=request.user).first()
-    return render(request, 'Intern/intern-profile-settings.html', {
+    return render(request, 'Student/student-profile-settings.html', {
         'course_student': course_student,
     })
 
@@ -651,3 +654,115 @@ def semester_delete(request, pk):
     semester = get_object_or_404(Semester, pk=pk)
     semester.delete()
     return JsonResponse({'status': 'success'})
+
+@login_required
+def student_masterlist(request):
+    query = request.GET.get('q', '')
+    filter_strand = request.GET.get('strand', '')
+    filter_gender = request.GET.get('gender', '')
+    filter_month = request.GET.get('month', '')
+
+    students = StudentMasterlist.objects.all()
+
+    if query:
+        students = students.filter(
+            models.Q(lrn__icontains=query) |
+            models.Q(first_name__icontains=query) |
+            models.Q(last_name__icontains=query)
+        )
+    if filter_strand:
+        students = students.filter(user__coursestudent__course__id=filter_strand)
+    if filter_gender:
+        students = students.filter(gender=filter_gender)
+    if filter_month:
+        students = students.filter(date_of_birth__month=filter_month)
+
+    from .models import Course
+    strands = Course.objects.all()
+    months = [(i, calendar.month_name[i]) for i in range(1, 13)]
+
+    return render(request, 'Supervisor/student_masterlist.html', {
+        'students': students,
+        'strands': strands,
+        'months': months,
+        'query': query,
+        'filter_strand': filter_strand,
+        'filter_gender': filter_gender,
+        'filter_month': filter_month,
+    })
+
+@login_required
+def add_student_masterlist(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        lrn = data.get('lrn')
+        first_name = data.get('first_name')
+        middle_initial = data.get('middle_initial', '')
+        last_name = data.get('last_name')
+        email = data.get('email')
+        gender = data.get('gender')
+        date_of_birth = data.get('date_of_birth')
+        password = last_name.capitalize()
+        user = CustomUser.objects.create_user(
+            email=email,
+            password=password,
+            role='student',
+            student_id=lrn,
+            first_name=first_name,
+            last_name=last_name,
+            must_change_password=True
+        )
+        student = StudentMasterlist.objects.create(
+            lrn=lrn,
+            first_name=first_name,
+            middle_initial=middle_initial,
+            last_name=last_name,
+            email=email,
+            gender=gender,
+            date_of_birth=date_of_birth,
+            user=user
+        )
+        return JsonResponse({'success': True, 'student': {
+            'id': student.id,
+            'lrn': student.lrn,
+            'first_name': student.first_name,
+            'middle_initial': student.middle_initial,
+            'last_name': student.last_name,
+            'email': student.email,
+            'gender': student.gender,
+            'date_of_birth': str(student.date_of_birth),
+        }})
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+@login_required
+def edit_student_masterlist(request, pk):
+    student = get_object_or_404(StudentMasterlist, pk=pk)
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        student.lrn = data.get('lrn', student.lrn)
+        student.first_name = data.get('first_name', student.first_name)
+        student.middle_initial = data.get('middle_initial', student.middle_initial)
+        student.last_name = data.get('last_name', student.last_name)
+        student.email = data.get('email', student.email)
+        student.gender = data.get('gender', student.gender)
+        student.date_of_birth = data.get('date_of_birth', student.date_of_birth)
+        student.save()
+        # Update user as well
+        if student.user:
+            student.user.email = student.email
+            student.user.first_name = student.first_name
+            student.user.last_name = student.last_name
+            student.user.student_id = student.lrn
+            student.user.save()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+@login_required
+def delete_student_masterlist(request, pk):
+    student = get_object_or_404(StudentMasterlist, pk=pk)
+    if request.method == 'POST':
+        if student.user:
+            student.user.delete()
+        student.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Invalid request'})

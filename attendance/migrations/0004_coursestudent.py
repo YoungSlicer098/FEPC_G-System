@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('date_added', models.DateField(auto_now_add=True)),
                 ('course', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='students', to='attendance.course')),
-                ('student', models.ForeignKey(limit_choices_to={'role': 'intern'}, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('student', models.ForeignKey(limit_choices_to={'role': 'student'}, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
     ]

@@ -15,11 +15,12 @@
     <!-- Sidebar -->
     <aside id="sidebar" class="fixed top-0 left-0 w-64 h-full bg-green-600 text-white p-6 z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out lg:static lg:block">
         <div class="flex items-center space-x-3 mb-6">
-        <img src="{% static 'assets/fepclogo.png' %}" alt="Logo" class="w-8 h-8 rounded-full">
-        <h2 class="text-2xl font-bold">G-System</h2>
-        </div>
+            <img src="{% static 'assets/fepclogo.png' %}" alt="Logo" class="w-12 h-12 rounded-full">
+            <h2 class="text-2xl font-bold">G-System</h2>
+            </div>
         <ul class="space-y-4">
-            <li><a href="{% url 'supervisor_dashboard' %}" class="block py-2 px-4 rounded hover:bg-yellow-500">🏠 Dashboard</a></li>
+            <li><a href="{% url 'supervisor_dashboard' %}" class="block py-2 px-4 rounded bg-yellow-500">🏠 Dashboard</a></li>
+            <li><a href="{% url 'student_masterlist' %}" class="block py-2 px-4 rounded hover:bg-yellow-500">👥 Students</a></li>
             <li><a href="{% url 'supervisor_profile' %}" class="block py-2 px-4 rounded hover:bg-yellow-500">⚙️ Profile & Settings</a></li>
             <li><button onclick="openLogoutModal()" class="w-full text-left py-2 px-4 rounded hover:bg-red-600">🚪 Logout</button></li>
         </ul>

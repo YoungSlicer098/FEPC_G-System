@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Intern Login - I-Track</title>
+    <title>student Login - I-Track</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -23,7 +23,7 @@
         <p class="text-gray-600 text-center mb-6">Enter your credentials to access your account.</p>
 
         <!-- Login Form -->
-        <form method="POST" action="{% url 'intern_login' %}">
+        <form method="POST" action="{% url 'student_login' %}">
             {% csrf_token %}
             <!-- Email Field -->
             <div class="mb-4">
