@@ -35,8 +35,12 @@ class CustomUser(AbstractUser):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     student_id = models.CharField(max_length=20, unique=True, null=True, blank=True)  # Student ID field
     
+    # Additional student fields (from StudentMasterlist)
+    middle_initial = models.CharField(max_length=1, blank=True, null=True)
+    gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female')], blank=True, null=True)
+    date_of_birth = models.DateField(blank=True, null=True)
+    
     must_change_password = models.BooleanField(default=True)
-
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -44,6 +48,8 @@ class CustomUser(AbstractUser):
     objects = CustomUserManager()
 
     def __str__(self):
+        if self.role == 'student' and self.student_id:
+            return f"{self.student_id} - {self.last_name}, {self.first_name}"
         return self.email
 
 # Academic Year Management
@@ -91,15 +97,13 @@ class Subject(models.Model):
     class Meta:
         ordering = ['name']
 
-#supervisor
-
+# Course Management
 class Course(models.Model):
     name = models.CharField(max_length=100)
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name='courses')
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name='courses')
     course_code = models.CharField(max_length=20, blank=True, null=True)
-    # Use settings.AUTH_USER_MODEL to avoid direct import of CustomUser
-    supervisor = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='courses')
+    supervisor = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='courses')
     default_subjects = models.ManyToManyField(Subject, blank=True, related_name='courses')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -119,58 +123,8 @@ class CourseStudent(models.Model):
     def __str__(self):
         return f"{self.student.email} in {self.course.name}"
 
-    
-class Meta:
-    unique_together = ('name', 'academic_year', 'supervisor')
-
-#student
-
-class Attendance(models.Model):
-    student = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        limit_choices_to={'role': 'student'}
-    )
-    date = models.DateField(default=timezone.now)
-    time_in = models.TimeField(null=True, blank=True)
-    time_out = models.TimeField(null=True, blank=True)
-    location_in = models.CharField(max_length=255, blank=True)
-    location_out = models.CharField(max_length=255, blank=True)
-    
-    STATUS_CHOICES = (
-        ('Present', 'Present'),
-        ('Late', 'Late'),
-        ('Absent', 'Absent'),
-    )
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Absent')
-
     class Meta:
-        unique_together = ('student', 'date')  # Prevent duplicate entries per day
-
-    def __str__(self):
-        return f"{self.student.email} - {self.date} ({self.status})"
-
-class StudentMasterlist(models.Model):
-    lrn = models.CharField(max_length=12, unique=True, primary_key=True)
-    first_name = models.CharField(max_length=50)
-    middle_initial = models.CharField(max_length=1, blank=True, null=True)
-    last_name = models.CharField(max_length=50)
-    email = models.EmailField(unique=True)
-    gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female')])
-    date_of_birth = models.DateField()
-    password = models.CharField(max_length=128, blank=True, null=True)  # Store initial password for reference
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def save(self, *args, **kwargs):
-        # Auto-fill password with capitalized last name if not set
-        if not self.password and self.last_name:
-            self.password = self.last_name.capitalize()
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.lrn} - {self.last_name}, {self.first_name}"
+        unique_together = ('course', 'student')
 
 class StudentAuditLog(models.Model):
     ACTION_CHOICES = (
@@ -180,10 +134,10 @@ class StudentAuditLog(models.Model):
     )
     supervisor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, limit_choices_to={'role': 'supervisor'})
     action = models.CharField(max_length=10, choices=ACTION_CHOICES)
-    student_lrn = models.CharField(max_length=20)
+    student_id = models.CharField(max_length=20)
     student_name = models.CharField(max_length=100)
     details = models.TextField(blank=True)  # JSON or text summary of changes
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.get_action_display()} by {self.supervisor} on {self.student_lrn} at {self.timestamp}"
+        return f"{self.get_action_display()} by {self.supervisor} on {self.student_id} at {self.timestamp}"

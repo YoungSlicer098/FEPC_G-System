@@ -6,7 +6,6 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('about/', views.about, name='about'),
     path('supervisor/login/', views.supervisor_login, name='supervisor_login'),
-    path('supervisor/register/', views.supervisor_register, name='supervisor_register'),
     path('supervisor/logout/', views.supervisor_logout, name='supervisor_logout'),
     path('student/login/', views.student_login, name='student_login'),
     #supervisor
@@ -20,7 +19,6 @@ urlpatterns = [
     path('add-student/', views.add_student, name='add_student'),
     path('edit-student/', views.edit_student, name='edit_student'),
     path('delete-student/', views.delete_student, name='delete_student'),
-    path('supervisor/students/<int:student_id>/attendance/', views.view_student_attendance, name='view_student_attendance'),
     # Academic Year CRUD
     path('supervisor/academic-years/', views.academic_year_list, name='academic_year_list'),
     path('supervisor/academic-year/create/', views.academic_year_create, name='academic_year_create'),
@@ -35,11 +33,11 @@ urlpatterns = [
     path('student/change-password/', student_change_password, name='student_change_password'),
     path('student/logout/', views.student_logout, name='student_logout'),
     path('student/dashboard/', views.student_dashboard, name='student_dashboard'),
-    path('student/time-in/', views.student_time_in, name='student_time_in'),
-    path('student/time-out/', views.student_time_out, name='student_time_out'),
     path('student/profile-settings/', views.student_profile_settings, name='student_profile_settings'),
+    # Student Masterlist (Updated for CustomUser)
     path('supervisor/students/', views.student_masterlist, name='student_masterlist'),
     path('supervisor/students/add/', views.add_student_masterlist, name='add_student_masterlist'),
-    path('supervisor/students/<int:lrn>/edit/', views.edit_student_masterlist, name='edit_student_masterlist'),
-    path('supervisor/students/<int:lrn>/delete/', views.delete_student_masterlist, name='delete_student_masterlist'),
+    path('supervisor/students/<int:pk>/edit/', views.edit_student_masterlist, name='edit_student_masterlist'),
+    path('supervisor/students/<int:pk>/delete/', views.delete_student_masterlist, name='delete_student_masterlist'),
+    path('supervisor/students/multiple-delete/', views.multiple_delete_students, name='multiple_delete_students'),
 ]

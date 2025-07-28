@@ -34,11 +34,14 @@
         <!-- Header -->
         <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
             <h1 class="text-3xl font-bold">Student Masterlist</h1>
-            <button id="addStudentBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-yellow-500">+ Add Student</button>
+            <div class="flex gap-2 flex-shrink-0">
+                <button id="addStudentBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-yellow-500 whitespace-nowrap">+ Add Student</button>
+                <button id="multipleDeleteBtn" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 hidden whitespace-nowrap">🗑️ Delete Selected</button>
+            </div>
         </div>
         <!-- Filters and Search -->
         <div class="flex flex-col md:flex-row md:items-center gap-4 mb-4">
-            <input type="text" id="searchStudent" placeholder="Search by name or LRN..." class="w-full md:w-1/3 p-3 border rounded shadow" />
+            <input type="text" id="searchStudent" placeholder="Search by name or Student ID..." class="w-full md:w-1/3 p-3 border rounded shadow" />
             <select id="filterStrand" class="w-full md:w-1/6 p-3 border rounded shadow">
                 <option value="">All Strands</option>
                 <!-- Dynamically populate with strands/sections -->
@@ -60,7 +63,10 @@
             <table class="min-w-full bg-white shadow rounded-lg">
                 <thead class="bg-green-600 text-white">
                     <tr>
-                        <th class="py-3 px-4 text-left">LRN</th>
+                        <th class="py-3 px-4 text-left">
+                            <input type="checkbox" id="selectAll" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+                        </th>
+                        <th class="py-3 px-4 text-left">Student ID</th>
                         <th class="py-3 px-4 text-left">Name</th>
                         <th class="py-3 px-4 text-left">Email</th>
                         <th class="py-3 px-4 text-left">Gender</th>
@@ -72,7 +78,10 @@
                 <tbody id="studentList" class="text-gray-700">
                     {% for student in students %}
                         <tr class="hover:bg-gray-100" data-id="{{ student.id }}">
-                            <td class="p-3 lrn"><span class="lrn">{{ student.lrn }}</span></td>
+                            <td class="p-3">
+                                <input type="checkbox" class="student-checkbox w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" value="{{ student.id }}">
+                            </td>
+                            <td class="p-3 student-id"><span class="student-id">{{ student.student_id }}</span></td>
                             <td class="p-3">
                                 <span class="last-name">{{ student.last_name }}</span>,
                                 <span class="first-name">{{ student.first_name }}</span>
@@ -82,26 +91,22 @@
                             <td class="p-3 gender"><span class="gender">{{ student.gender|title }}</span></td>
                             <td class="p-3 dob"><span class="dob">{{ student.date_of_birth|date:"Y-m-d" }}</span></td>
                             <td class="p-3">
-                                {% if student.user %}
-                                    {% with course_student=student.user.coursestudent_set.first %}
-                                        {% if course_student %}
-                                            {{ course_student.course.name }}
-                                        {% else %}
-                                            -
-                                        {% endif %}
-                                    {% endwith %}
-                                {% else %}
-                                    -
-                                {% endif %}
+                                {% with course_student=student.coursestudent_set.first %}
+                                    {% if course_student %}
+                                        {{ course_student.course.name }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                {% endwith %}
                             </td>
-                            <td class="p-3 text-center space-x-2">
-                                <button class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 editBtn">Edit</button>
-                                <button class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 deleteBtn">Delete</button>
+                            <td class="p-3 text-center space-x-2 whitespace-nowrap">
+                                <button class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 editBtn whitespace-nowrap">Edit</button>
+                                <button class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 deleteBtn whitespace-nowrap">Delete</button>
                             </td>
                         </tr>
                     {% empty %}
                         <tr id="noStudentsRow">
-                            <td colspan="7" class="text-center p-4 text-gray-500">No students found.</td>
+                            <td colspan="8" class="text-center p-4 text-gray-500">No students found.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -114,7 +119,7 @@
     <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
         <h2 class="text-xl font-bold mb-4">Add Student</h2>
         <form id="addStudentForm" class="space-y-4">
-            <input type="text" id="addLRN" placeholder="LRN" class="w-full p-2 border rounded" required />
+            <input type="text" id="addStudentId" placeholder="Student ID (12 digits)" class="w-full p-2 border rounded" required maxlength="12" />
             <input type="text" id="addFirstName" placeholder="First Name" class="w-full p-2 border rounded" required />
             <input type="text" id="addMiddleInitial" placeholder="Middle Initial (optional)" class="w-full p-2 border rounded" maxlength="1" />
             <input type="text" id="addLastName" placeholder="Last Name" class="w-full p-2 border rounded" required />
@@ -138,7 +143,7 @@
         <h2 class="text-xl font-bold mb-4">Edit Student</h2>
         <form id="editStudentForm" class="space-y-4">
             <input type="hidden" id="editStudentId" />
-            <input type="text" id="editLRN" placeholder="LRN" class="w-full p-2 border rounded" required />
+            <input type="text" id="editStudentIdField" placeholder="Student ID (12 digits)" class="w-full p-2 border rounded" required maxlength="12" />
             <input type="text" id="editFirstName" placeholder="First Name" class="w-full p-2 border rounded" required />
             <input type="text" id="editMiddleInitial" placeholder="Middle Initial (optional)" class="w-full p-2 border rounded" maxlength="1" />
             <input type="text" id="editLastName" placeholder="Last Name" class="w-full p-2 border rounded" required />
@@ -167,6 +172,18 @@
         </div>
     </div>
 </div>
+<!-- Multiple Delete Confirmation Modal -->
+<div id="multipleDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h2 class="text-xl font-bold mb-4 text-red-600">Delete Multiple Students</h2>
+        <p id="multipleDeleteMessage" class="mb-6 text-gray-700">Are you sure you want to delete <span id="deleteCount">0</span> selected student(s)?</p>
+        <p class="mb-6 text-sm text-gray-500">This action cannot be undone.</p>
+        <div class="flex justify-end space-x-2">
+            <button id="cancelMultipleDelete" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Cancel</button>
+            <button id="confirmMultipleDelete" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Delete All</button>
+        </div>
+    </div>
+</div>
 <script>
     const menuBtn = document.getElementById('menuBtn');
     const sidebar = document.getElementById('sidebar');
@@ -175,6 +192,7 @@
     });
 </script>
 <script src="{% static 'Supervisor-js/common.js' %}"></script>
+<script src="{% static 'Supervisor-js/scripts.js' %}"></script>
 <!-- Add your JS for search/filter here -->
 <script>
 // CSRF token getter for Django
@@ -210,6 +228,106 @@ document.addEventListener('DOMContentLoaded', function() {
     const confirmDelete = document.getElementById('confirmDeleteStudent');
     let deleteId = null;
 
+    const multipleDeleteBtn = document.getElementById('multipleDeleteBtn');
+    const multipleDeleteModal = document.getElementById('multipleDeleteModal');
+    const cancelMultipleDelete = document.getElementById('cancelMultipleDelete');
+    const confirmMultipleDelete = document.getElementById('confirmMultipleDelete');
+    const deleteCount = document.getElementById('deleteCount');
+
+    // --- Checkbox Management ---
+    const selectAllCheckbox = document.getElementById('selectAll');
+    
+    function updateMultipleDeleteButton() {
+        const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
+        if (checkedBoxes.length > 0) {
+            multipleDeleteBtn.classList.remove('hidden');
+            multipleDeleteBtn.textContent = `🗑️ Delete Selected (${checkedBoxes.length})`;
+        } else {
+            multipleDeleteBtn.classList.add('hidden');
+        }
+    }
+
+    function updateSelectAllCheckbox() {
+        const checkboxes = document.querySelectorAll('.student-checkbox');
+        const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
+        
+        if (checkedBoxes.length === 0) {
+            selectAllCheckbox.indeterminate = false;
+            selectAllCheckbox.checked = false;
+        } else if (checkedBoxes.length === checkboxes.length) {
+            selectAllCheckbox.indeterminate = false;
+            selectAllCheckbox.checked = true;
+        } else {
+            selectAllCheckbox.indeterminate = true;
+        }
+    }
+
+    // --- Select All Functionality ---
+    selectAllCheckbox.addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.student-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateMultipleDeleteButton();
+    });
+
+    // --- Individual Checkbox Event Listeners ---
+    function attachCheckboxEvents() {
+        document.querySelectorAll('.student-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                updateMultipleDeleteButton();
+                updateSelectAllCheckbox();
+            });
+        });
+    }
+
+    // --- Multiple Delete Functionality ---
+    multipleDeleteBtn.addEventListener('click', function() {
+        const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
+        const count = checkedBoxes.length;
+        
+        if (count === 0) {
+            alert('Please select at least one student to delete.');
+            return;
+        }
+        
+        deleteCount.textContent = count;
+        multipleDeleteModal.classList.remove('hidden');
+    });
+
+    cancelMultipleDelete.addEventListener('click', function() {
+        multipleDeleteModal.classList.add('hidden');
+    });
+
+    confirmMultipleDelete.addEventListener('click', function() {
+        const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
+        const studentIds = Array.from(checkedBoxes).map(checkbox => checkbox.value);
+        
+        fetch('/supervisor/students/multiple-delete/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                student_ids: studentIds
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                multipleDeleteModal.classList.add('hidden');
+                location.reload();
+            } else {
+                alert('Error deleting students: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting students. Please try again.');
+        });
+    });
+
     // --- Open/Close Modals ---
     addBtn.onclick = () => addModal.classList.remove('hidden');
     closeAdd.onclick = () => addModal.classList.add('hidden');
@@ -226,7 +344,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 "X-CSRFToken": csrftoken
             },
             body: JSON.stringify({
-                lrn: document.getElementById('addLRN').value,
+                student_id: document.getElementById('addStudentId').value,
                 first_name: document.getElementById('addFirstName').value,
                 middle_initial: document.getElementById('addMiddleInitial').value,
                 last_name: document.getElementById('addLastName').value,
@@ -257,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Edit Student ---
     window.openEditStudentModal = function(student) {
         document.getElementById('editStudentId').value = student.id;
-        document.getElementById('editLRN').value = student.lrn;
+        document.getElementById('editStudentIdField').value = student.student_id;
         document.getElementById('editFirstName').value = student.first_name;
         document.getElementById('editMiddleInitial').value = student.middle_initial || '';
         document.getElementById('editLastName').value = student.last_name;
@@ -277,7 +395,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 "X-CSRFToken": csrftoken
             },
             body: JSON.stringify({
-                lrn: document.getElementById('editLRN').value,
+                student_id: document.getElementById('editStudentIdField').value,
                 first_name: document.getElementById('editFirstName').value,
                 middle_initial: document.getElementById('editMiddleInitial').value,
                 last_name: document.getElementById('editLastName').value,
@@ -309,13 +427,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (err) err.remove();
     }
     // --- Delete Student ---
-    window.openDeleteStudentModal = function(lrn) {
-        deleteLRN = lrn;
+    window.openDeleteStudentModal = function(studentId) {
+        deleteId = studentId;
         deleteModal.classList.remove('hidden');
         clearDeleteStudentError();
     };
     confirmDelete.onclick = function() {
-        fetch(`/supervisor/students/${deleteLRN}/delete/`, {
+        fetch(`/supervisor/students/${deleteId}/delete/`, {
             method: "POST",
             headers: {
                 "X-CSRFToken": csrftoken
@@ -351,7 +469,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const row = btn.closest('tr');
                 window.openEditStudentModal({
                     id: row.dataset.id,
-                    lrn: row.querySelector('.lrn').textContent.trim(),
+                    student_id: row.querySelector('.student-id').textContent.trim(),
                     first_name: row.querySelector('.first-name').textContent.trim(),
                     middle_initial: row.querySelector('.middle-initial').textContent.trim(),
                     last_name: row.querySelector('.last-name').textContent.trim(),
@@ -364,9 +482,12 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.deleteBtn').forEach(btn => {
             btn.onclick = function() {
                 const row = btn.closest('tr');
-                window.openDeleteStudentModal(row.querySelector('.lrn').textContent.trim());
+                window.openDeleteStudentModal(row.dataset.id);
             };
         });
+        
+        // Attach checkbox events
+        attachCheckboxEvents();
     }
     attachRowEvents();
 
@@ -378,7 +499,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const studentList = document.getElementById('studentList');
 
     function showLoading() {
-        studentList.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-500">Loading...</td></tr>';
+        studentList.innerHTML = '<tr><td colspan="8" class="text-center p-4 text-gray-500">Loading...</td></tr>';
     }
 
     function fetchStudents() {
@@ -398,6 +519,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const newTbody = doc.getElementById('studentList');
                 studentList.innerHTML = newTbody.innerHTML;
                 attachRowEvents();
+                updateMultipleDeleteButton();
+                updateSelectAllCheckbox();
             });
     }
     searchInput.oninput = fetchStudents;
