@@ -93,21 +93,99 @@ document.addEventListener("DOMContentLoaded", function () {
 
     updateTotalStrandsCount();
 
-    //SEARCH STRANDS
+    function highlightMatch(text, query) {
+        if (!query) return text;
+        const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return text.replace(regex, '<mark>$1</mark>');
+    }
+
+    function normalize(text) {
+        return (text || "")
+            .toLowerCase()
+            .replace(/^[^a-z0-9]+|[^a-z0-9]+$/gi, "") // remove leading/trailing non-alphanum
+            .replace(/\s+/g, " ") // collapse whitespace
+            .trim();
+    }
+
     function setupStrandSearch() {
-    const searchInput = document.getElementById("searchCourse");
-    const courseItems = document.querySelectorAll(".courseItem");
+        const searchInput = document.getElementById("searchCourse");
+        const courseList = document.getElementById("courseList");
+        const noCoursesMessageId = "noSearchResultsMessage";
+        // Store original text for highlight reset
+        const originalTexts = new Map();
 
-    searchInput.addEventListener("input", () => {
-        const query = searchInput.value.toLowerCase().trim();
+        searchInput.addEventListener("input", () => {
+            const query = normalize(searchInput.value);
+            let anyVisible = false;
 
-        courseItems.forEach(item => {
-            const courseName = item.dataset.courseName?.toLowerCase() || "";
-            item.style.display = courseName.includes(query) ? "" : "none";
+            // Always get the latest course items (in case of dynamic changes)
+            const courseItems = courseList.querySelectorAll(".courseItem");
+
+            courseItems.forEach(item => {
+                // Elements
+                const nameEl = item.querySelector('.course-name');
+                const codeEl = item.querySelector('.course-code');
+                const yearEl = item.querySelector('.course-academic-year');
+                const semEl = item.querySelector('.course-semester');
+                const subjEl = item.querySelector('.course-subjects');
+
+                // Store original text for highlight reset
+                if (nameEl && !originalTexts.has(nameEl)) originalTexts.set(nameEl, nameEl.textContent || "");
+                if (codeEl && !originalTexts.has(codeEl)) originalTexts.set(codeEl, codeEl.textContent || "");
+                if (yearEl && !originalTexts.has(yearEl)) originalTexts.set(yearEl, yearEl.textContent || "");
+                if (semEl && !originalTexts.has(semEl)) originalTexts.set(semEl, semEl.textContent || "");
+                if (subjEl && !originalTexts.has(subjEl)) originalTexts.set(subjEl, subjEl.textContent || "");
+
+                // Gather all searchable text (normalized)
+                const courseName = normalize(nameEl?.textContent);
+                const courseCode = normalize(codeEl?.textContent);
+                const academicYear = normalize(yearEl?.textContent);
+                const semester = normalize(semEl?.textContent);
+                const subjects = normalize(subjEl?.textContent);
+
+                // Combine all fields
+                const searchable = [courseName, courseCode, academicYear, semester, subjects].join(" ");
+
+                // Show/hide item
+                if (searchable.includes(query)) {
+                    item.style.display = "";
+                    anyVisible = true;
+                } else {
+                    item.style.display = "none";
+                }
+
+                // Highlight matches or reset
+                function highlightOrReset(el, orig) {
+                    if (!el) return;
+                    if (query) {
+                        el.innerHTML = highlightMatch(orig, searchInput.value);
+                    } else {
+                        el.textContent = orig;
+                    }
+                }
+                highlightOrReset(nameEl, originalTexts.get(nameEl));
+                highlightOrReset(codeEl, originalTexts.get(codeEl));
+                highlightOrReset(yearEl, originalTexts.get(yearEl));
+                highlightOrReset(semEl, originalTexts.get(semEl));
+                highlightOrReset(subjEl, originalTexts.get(subjEl));
+            });
+
+            // Show/hide "No results" message
+            let noMsg = document.getElementById(noCoursesMessageId);
+            if (!anyVisible) {
+                if (!noMsg) {
+                    noMsg = document.createElement("p");
+                    noMsg.id = noCoursesMessageId;
+                    noMsg.className = "text-gray-600";
+                    noMsg.textContent = "No results found.";
+                    courseList.appendChild(noMsg);
+                }
+            } else if (noMsg) {
+                noMsg.remove();
+            }
+
+            updateTotalStrandsCount(); // Optional: update visible total
         });
-
-        updateTotalStrandsCount(); // Optional: update visible total
-    });
     }
 
     setupStrandSearch();
@@ -153,14 +231,18 @@ document.addEventListener("DOMContentLoaded", function () {
     // Subject management functions
     function addSubjectToList(subjectName, subjectCode, container, subjectsArray) {
         if (!subjectName.trim()) return;
-        
+        // Prevent duplicate by name or code (case-insensitive)
+        const nameLower = subjectName.trim().toLowerCase();
+        const codeLower = (subjectCode || '').trim().toLowerCase();
+        if (subjectsArray.some(s => s.name.toLowerCase() === nameLower || (s.code && s.code.toLowerCase() === codeLower && codeLower))) {
+            alert('Duplicate subject name or code.');
+            return;
+        }
         const subject = {
             name: subjectName.trim(),
             code: subjectCode.trim() || null
         };
-        
         subjectsArray.push(subject);
-        
         const subjectItem = document.createElement('div');
         subjectItem.className = 'flex items-center justify-between bg-gray-100 p-2 rounded';
         subjectItem.innerHTML = `
@@ -171,7 +253,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 ✕
             </button>
         `;
-        
         container.appendChild(subjectItem);
     }
 
@@ -642,18 +723,45 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // Update: loadCourseForEditing fetches all course data from backend
     async function loadCourseForEditing(courseId) {
         try {
-            // For now, we'll just populate the form with basic data
-            // In a real implementation, you'd fetch the course data from the server
+            // Show spinner, disable form
+            const spinner = document.getElementById('editCourseLoadingSpinner');
+            const form = document.getElementById('editCourseForm');
+            spinner.classList.remove('hidden');
+            form.classList.add('opacity-50');
+            form.querySelectorAll('input, select, button').forEach(el => el.disabled = true);
+
+            // Fetch course details from backend
+            const response = await fetch(`/supervisor/course/${courseId}/detail/`);
+            const data = await response.json();
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            // Populate form fields
+            editCourseNameInput.value = data.name;
+            editCourseCodeInput.value = data.course_code || "";
+            editAcademicYearSelect.value = data.academic_year;
+            editSemesterSelect.value = data.semester;
+
+            // Populate subjects
             editSelectedSubjects = [];
             editSubjectsList.innerHTML = '';
-            
-            // Set default values for academic year and semester
-            await loadAcademicYears();
-            await loadSemesters();
+            data.subjects.forEach(subject => {
+                addSubjectToList(subject.name, subject.code, editSubjectsList, editSelectedSubjects);
+            });
         } catch (error) {
             console.error("Error loading course for editing:", error);
+        } finally {
+            // Hide spinner, enable form
+            const spinner = document.getElementById('editCourseLoadingSpinner');
+            const form = document.getElementById('editCourseForm');
+            spinner.classList.add('hidden');
+            form.classList.remove('opacity-50');
+            form.querySelectorAll('input, select, button').forEach(el => el.disabled = false);
         }
     }
 
@@ -697,6 +805,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     noCoursesMessage.textContent = "No courses yet. Click \"Add Course\" to create one.";
                     courseList.appendChild(noCoursesMessage);
                 }
+                location.reload();
             } else {
                 alert("Failed to delete course: " + data.message);
             }

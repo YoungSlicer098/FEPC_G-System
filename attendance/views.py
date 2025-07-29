@@ -95,7 +95,7 @@ def supervisor_dashboard(request):
             Semester.objects.create(name="1st Sem")
             Semester.objects.create(name="2nd Sem")
         
-        courses = Course.objects.filter(supervisor=request.user)
+        courses = Course.objects.all()
         return render(request, 'Supervisor/supervisor-dashboard.html', {'courses': courses})
     return redirect('supervisor_login')
 
@@ -770,3 +770,43 @@ def multiple_delete_students(request):
         return JsonResponse({'success': False, 'error': 'Invalid JSON data.'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': f'An error occurred: {str(e)}'})
+
+@login_required
+def course_detail(request, course_id):
+    if request.user.role != 'supervisor':
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    try:
+        course = Course.objects.get(id=course_id, supervisor=request.user)
+        subjects = [
+            {'name': s.name, 'code': s.code}
+            for s in course.default_subjects.all()
+        ]
+        return JsonResponse({
+            'id': course.id,
+            'name': course.name,
+            'course_code': course.course_code,
+            'academic_year': course.academic_year.id,
+            'semester': course.semester.id,
+            'subjects': subjects,
+        })
+    except Course.DoesNotExist:
+        return JsonResponse({'error': 'Course not found'}, status=404)
+
+@login_required
+def courses_json(request):
+    if request.user.role != 'supervisor':
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    courses = Course.objects.filter(supervisor=request.user).select_related('academic_year', 'semester').prefetch_related('default_subjects')
+    data = []
+    for course in courses:
+        data.append({
+            'id': course.id,
+            'name': course.name,
+            'course_code': course.course_code,
+            'academic_year_name': course.academic_year.name,
+            'semester_name': course.semester.name,
+            'subjects': [
+                {'name': s.name, 'code': s.code} for s in course.default_subjects.all()
+            ]
+        })
+    return JsonResponse({'courses': data})

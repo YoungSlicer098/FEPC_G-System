@@ -40,4 +40,6 @@ urlpatterns = [
     path('supervisor/students/<int:pk>/edit/', views.edit_student_masterlist, name='edit_student_masterlist'),
     path('supervisor/students/<int:pk>/delete/', views.delete_student_masterlist, name='delete_student_masterlist'),
     path('supervisor/students/multiple-delete/', views.multiple_delete_students, name='multiple_delete_students'),
+    path('supervisor/course/<int:course_id>/detail/', views.course_detail, name='course_detail'),
+    path('supervisor/courses/json/', views.courses_json, name='courses_json'),
 ]

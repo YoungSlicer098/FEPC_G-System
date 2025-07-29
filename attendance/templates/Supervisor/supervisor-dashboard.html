@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{% static 'assets/fepclogo.png' %}" type="image/x-icon">
     <title>Supervisor Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -87,12 +88,15 @@
                             <div class="courseItem bg-white p-4 rounded-lg shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4" data-course-id="{{ course.id }}" data-course-name="{{ course.name }}">
                                 <div class="flex flex-col">
                                     <p class="text-lg font-semibold flex flex-wrap items-center gap-x-2">
-                                        <span>{{ course.name }}</span>
-                                        <span class="text-gray-500 text-sm">{{ course.academic_year.name }}</span>
-                                        <span class="text-gray-500 text-sm">- {{ course.semester.name }}</span>
+                                        <span class="course-name">{{ course.name }}</span>
+                                        {% if course.course_code %}
+                                            <span class="course-code text-gray-400 text-xs">({{ course.course_code }})</span>
+                                        {% endif %}
+                                        <span class="course-academic-year text-gray-500 text-sm">{{ course.academic_year.name }}</span>
+                                        <span class="course-semester text-gray-500 text-sm">- {{ course.semester.name }}</span>
                                     </p>
                                     {% if course.default_subjects.all %}
-                                        <p class="text-sm text-gray-600 mt-1">
+                                        <p class="course-subjects text-sm text-gray-600 mt-1">
                                             Subjects: {{ course.default_subjects.all|join:", " }}
                                         </p>
                                     {% endif %}
@@ -174,6 +178,14 @@
 <div id="editCourseModal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
     <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-2xl mx-auto max-h-[90vh] overflow-y-auto">
         <h2 class="text-xl font-semibold mb-4">Edit Strand</h2>
+        <!-- Loading Spinner -->
+        <div id="editCourseLoadingSpinner" class="flex justify-center items-center mb-4 hidden">
+            <svg class="animate-spin h-8 w-8 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+            </svg>
+            <span class="ml-2 text-green-700">Loading...</span>
+        </div>
         <form id="editCourseForm">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
@@ -182,7 +194,7 @@
                 </div>
                 
                 <div>
-                    <label for="editCourseCode" class="block font-medium mb-1">Course Code:</label>
+                    <label for="editCourseCode" class="block font-medium mb-1">Course Code (Optional)</label>
                     <input type="text" id="editCourseCode" class="w-full p-2 border border-gray-300 rounded">
                 </div>
             </div>
