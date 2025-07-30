@@ -8,6 +8,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const manageAcademicYearsBtn = document.getElementById("manageAcademicYearsBtn");
     const manageSemestersBtn = document.getElementById("manageSemestersBtn");
     
+    // Filter elements
+    const filterAcademicYear = document.getElementById("filterAcademicYear");
+    const filterSemester = document.getElementById("filterSemester");
+    const clearFiltersBtn = document.getElementById("clearFilters");
+    
     // Course modals
     const deleteCourseModal = document.getElementById("deleteCourseModal");
     const deleteCourseMessage = document.getElementById("deleteCourseMessage");
@@ -114,8 +119,10 @@ document.addEventListener("DOMContentLoaded", function () {
         // Store original text for highlight reset
         const originalTexts = new Map();
 
-        searchInput.addEventListener("input", () => {
+        function performSearch() {
             const query = normalize(searchInput.value);
+            const selectedYear = filterAcademicYear.value;
+            const selectedSemester = filterSemester.value;
             let anyVisible = false;
 
             // Always get the latest course items (in case of dynamic changes)
@@ -143,11 +150,20 @@ document.addEventListener("DOMContentLoaded", function () {
                 const semester = normalize(semEl?.textContent);
                 const subjects = normalize(subjEl?.textContent);
 
-                // Combine all fields
+                // Combine all fields for text search
                 const searchable = [courseName, courseCode, academicYear, semester, subjects].join(" ");
 
-                // Show/hide item
-                if (searchable.includes(query)) {
+                // Check if item matches search query
+                const matchesSearch = !query || searchable.includes(query);
+                
+                // Check if item matches year filter
+                const matchesYear = !selectedYear || academicYear === normalize(selectedYear);
+                
+                // Check if item matches semester filter
+                const matchesSemester = !selectedSemester || semester === normalize(selectedSemester);
+
+                // Show/hide item based on all filters
+                if (matchesSearch && matchesYear && matchesSemester) {
                     item.style.display = "";
                     anyVisible = true;
                 } else {
@@ -184,8 +200,45 @@ document.addEventListener("DOMContentLoaded", function () {
                 noMsg.remove();
             }
 
-            updateTotalStrandsCount(); // Optional: update visible total
+            updateTotalStrandsCount(); // Update visible total
+        }
+
+        // Add event listeners for search and filters
+        searchInput.addEventListener("input", performSearch);
+        filterAcademicYear.addEventListener("change", performSearch);
+        filterSemester.addEventListener("change", performSearch);
+        
+        // Clear filters button
+        clearFiltersBtn.addEventListener("click", () => {
+            searchInput.value = "";
+            searchInput.stringify = "";
+            filterAcademicYear.value = "";
+            filterSemester.value = "";
+            performSearch();
+            updateFilterButtonState();
         });
+
+        // Update filter button state based on active filters
+        function updateFilterButtonState() {
+            const hasActiveFilters = searchInput.value || filterAcademicYear.value || filterSemester.value;
+            if (hasActiveFilters) {
+                clearFiltersBtn.classList.remove('bg-gray-500', 'hover:bg-gray-600');
+                clearFiltersBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+                clearFiltersBtn.textContent = 'Clear Filters (Active)';
+            } else {
+                clearFiltersBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                clearFiltersBtn.classList.add('bg-gray-500', 'hover:bg-gray-600');
+                clearFiltersBtn.textContent = 'Clear Filters';
+            }
+        }
+
+        // Update button state on any filter change
+        searchInput.addEventListener("input", updateFilterButtonState);
+        filterAcademicYear.addEventListener("change", updateFilterButtonState);
+        filterSemester.addEventListener("change", updateFilterButtonState);
+        
+        // Initial state
+        updateFilterButtonState();
     }
 
     setupStrandSearch();
@@ -198,6 +251,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = await response.json();
             populateSelect(academicYearSelect, data.academic_years, 'id', 'name');
             populateSelect(editAcademicYearSelect, data.academic_years, 'id', 'name');
+            populateSelect(filterAcademicYear, data.academic_years, 'name', 'name'); // For filter dropdown
         } catch (error) {
             console.error('Error loading academic years:', error);
         }
@@ -209,6 +263,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = await response.json();
             populateSelect(semesterSelect, data.semesters, 'id', 'name');
             populateSelect(editSemesterSelect, data.semesters, 'id', 'name');
+            populateSelect(filterSemester, data.semesters, 'name', 'name'); // For filter dropdown
         } catch (error) {
             console.error('Error loading semesters:', error);
         }
@@ -424,6 +479,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 newAcademicYearInput.value = '';
                 loadAcademicYearsList();
                 loadAcademicYears();
+                // Refresh filter dropdowns
+                setupStrandSearch();
+                // Refresh dashboard lists
+                refreshDashboardLists();
             } else {
                 alert("Failed to create academic year.");
             }
@@ -489,6 +548,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 newSemesterSelect.value = '';
                 loadSemestersList();
                 loadSemesters();
+                // Refresh filter dropdowns
+                setupStrandSearch();
+                // Refresh dashboard lists
+                refreshDashboardLists();
             } else {
                 alert("Failed to create semester.");
             }
@@ -551,9 +614,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     loadSemestersList();
                     loadSemesters();
                 }
-                setTimeout(() => {
-                    location.reload();
-                }, 300);
+                // Refresh filter dropdowns
+                setupStrandSearch();
+                // Refresh dashboard lists
+                refreshDashboardLists();
             } else {
                 alert("Failed to delete item.");
             }
@@ -611,6 +675,10 @@ document.addEventListener("DOMContentLoaded", function () {
             if (data.status === "success") {
                 loadAcademicYearsList();
                 loadAcademicYears();
+                // Refresh filter dropdowns
+                setupStrandSearch();
+                // Refresh dashboard lists
+                refreshDashboardLists();
             } else {
                 alert("Failed to update academic year.");
             }
@@ -636,6 +704,10 @@ document.addEventListener("DOMContentLoaded", function () {
             if (data.status === "success") {
                 loadSemestersList();
                 loadSemesters();
+                // Refresh filter dropdowns
+                setupStrandSearch();
+                // Refresh dashboard lists
+                refreshDashboardLists();
             } else {
                 alert("Failed to update semester.");
             }
@@ -669,6 +741,15 @@ document.addEventListener("DOMContentLoaded", function () {
     // Initialize
     loadAcademicYears();
     loadSemesters();
+    setupStrandSearch();
+    
+    // Add refresh functionality for the lists
+    function refreshDashboardLists() {
+        // This will be called when academic years or semesters are modified
+        setTimeout(() => {
+            location.reload();
+        }, 500);
+    }
 
     // Course management functionality
     manageCoursesBtn.addEventListener("click", () => {

@@ -96,7 +96,21 @@ def supervisor_dashboard(request):
             Semester.objects.create(name="2nd Sem")
         
         courses = Course.objects.all()
-        return render(request, 'Supervisor/supervisor-dashboard.html', {'courses': courses})
+        academic_years = AcademicYear.objects.all()
+        semesters = Semester.objects.all()
+        
+        # Add course counts for each academic year and semester
+        for year in academic_years:
+            year.course_count = year.courses.count()
+        
+        for semester in semesters:
+            semester.course_count = semester.courses.count()
+        
+        return render(request, 'Supervisor/supervisor-dashboard.html', {
+            'courses': courses,
+            'academic_years': academic_years,
+            'semesters': semesters
+        })
     return redirect('supervisor_login')
 
 @login_required
